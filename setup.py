@@ -14,19 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from distutils.core import setup
+from setuptools import setup, find_packages
 
 setup(
         name='gntools',
-        packages=['gntools'],
+        packages=find_packages(exclude=('tests',)),
         version='0.1',
         license='Apache License 2.0',
         description='GEONIS tools for the Geocom Python Framework  (Esri ArcGIS 10.6+).',
         author='Geocom Informatik AG / VertiGIS, Burgdorf, Switzerland',
         author_email='github@geocom.ch',
         url='https://github.com/geocom-gis/gntools',
-        download_url='https://github.com/geocom-gis/gntools/archive/gntools_v010.tar.gz',
-        requires=['pytest', 'gpf'],
+        # download_url='https://github.com/geocom-gis/gntools/archive/gntools_v010.tar.gz',
+        install_requires=['gpf'],
         keywords=[
             'Geocom', 'GIS', 'GEONIS', 'tools', 'scripting', 'framework', 'spatial',
             'geospatial', 'geoprocessing', 'Esri', 'ArcGIS', 'ArcPy', 'VertiGIS'
