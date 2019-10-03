@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#
+
 # Configuration file for the Sphinx documentation builder.
 #
 # This file does only contain a selection of the most common options. For a
@@ -35,8 +35,8 @@ sys.path.insert(0, os.path.abspath('..\\..'))
 # -- Project information -----------------------------------------------------
 
 project = u'gntools'
-copyright = u'2019, Geocom Informatik AG, Burgdorf, Switzerland'
-author = u'Geocom Informatik AG (SCSA)'
+copyright = u'2019, Geocom Informatik AG / VertiGIS, Burgdorf, Switzerland'
+author = u'Geocom Informatik AG'
 
 # The short X.Y version
 version = u'0.1'
@@ -108,7 +108,7 @@ html_theme = 'sphinx_rtd_theme'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+# html_static_path = ['_static']
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
@@ -201,4 +201,4 @@ epub_exclude_files = ['search.html']
 # -- Options for todo extension ----------------------------------------------
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
-todo_include_todos = True
+todo_include_todos = False
