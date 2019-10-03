@@ -48,6 +48,7 @@ def test_menuargparser_bad():
         MenuArgParser()
 
 
+# noinspection PyProtectedMember
 def test_menuargparser_basic():
     sys.argv = [__file__, 'workspace', 'qualifier', '#', 1, 2]
     menu_params = MenuArgParser('Field0', 'Field1')
@@ -103,7 +104,7 @@ def test_formargparser_bad():
         FormArgParser()
 
 
-# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences, PyProtectedMember
 def test_formargparser_all():
     sys.argv = [__file__, 'workspace', 'qualifier', 'table', 'key', 'value', '{"test": 1}', 'a']
     form_params = FormArgParser('Field0')
