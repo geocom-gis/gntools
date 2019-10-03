@@ -27,7 +27,7 @@ setup(
         packages=find_packages(exclude=('tests', 'docs')),
         version='0.1',
         license='Apache License 2.0',
-        description='GEONIS tools for the Geocom Python Framework  (Esri ArcGIS 10.6+).',
+        description='GEONIS toolset for the Geocom Python Framework (Esri ArcGIS).',
         long_description=read('README.rst'),
         author='Geocom Informatik AG / VertiGIS, Burgdorf, Switzerland',
         author_email='github@geocom.ch',
