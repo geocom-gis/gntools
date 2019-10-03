@@ -31,8 +31,10 @@ setup(
         long_description=read('README.rst'),
         author='Geocom Informatik AG / VertiGIS, Burgdorf, Switzerland',
         author_email='github@geocom.ch',
-        url='https://github.com/geocom-gis/gntools',
-        # download_url='https://github.com/geocom-gis/gntools/archive/gntools_v010.tar.gz',
+        project_urls={
+            'Source': 'https://github.com/geocom-gis/gntools',
+            'Documentation': 'https://gntools.readthedocs.io/'
+        },
         keywords=[
             'Geocom', 'GIS', 'GEONIS', 'tools', 'scripting', 'framework', 'spatial',
             'geospatial', 'geoprocessing', 'Esri', 'ArcGIS', 'ArcPy', 'VertiGIS'
