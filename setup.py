@@ -24,7 +24,7 @@ def read(fname):
 
 setup(
         name='gntools',
-        packages=find_packages(exclude=('tests', 'apidoc')),
+        packages=find_packages(exclude=('tests', 'docs')),
         version='0.1',
         license='Apache License 2.0',
         description='GEONIS tools for the Geocom Python Framework  (Esri ArcGIS 10.6+).',
@@ -33,12 +33,12 @@ setup(
         author_email='github@geocom.ch',
         url='https://github.com/geocom-gis/gntools',
         # download_url='https://github.com/geocom-gis/gntools/archive/gntools_v010.tar.gz',
-        install_requires=['gpf'],
-        python_requires='>=2.7.14, <3',
         keywords=[
             'Geocom', 'GIS', 'GEONIS', 'tools', 'scripting', 'framework', 'spatial',
             'geospatial', 'geoprocessing', 'Esri', 'ArcGIS', 'ArcPy', 'VertiGIS'
         ],
+        install_requires=['gpf'],
+        python_requires='>=2.7.14, <3',
         classifiers=[
             'Development Status :: 4 - Beta',  # "3 - Alpha", "4 - Beta" or "5 - Production/Stable"
             'Intended Audience :: Developers',
