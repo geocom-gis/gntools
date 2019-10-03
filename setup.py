@@ -31,6 +31,7 @@ setup(
         long_description=read('README.rst'),
         author='Geocom Informatik AG / VertiGIS, Burgdorf, Switzerland',
         author_email='github@geocom.ch',
+        url='https://geocom.ch/',
         project_urls={
             'Source': 'https://github.com/geocom-gis/gntools',
             'Documentation': 'https://gntools.readthedocs.io/'
