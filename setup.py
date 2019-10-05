@@ -22,6 +22,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
+tests_require = ['pytest', 'pytest-cov', 'mock', 'pytest-mock']
 setup(
         name='gntools',
         packages=find_packages(exclude=('tests', 'docs')),
@@ -29,6 +30,7 @@ setup(
         license='Apache License 2.0',
         description='GEONIS toolset for the Geocom Python Framework (Esri ArcGIS).',
         long_description=read('README.rst'),
+        long_description_content_type='text/x-rst',
         author='Geocom Informatik AG / VertiGIS, Burgdorf, Switzerland',
         author_email='github@geocom.ch',
         url='https://github.com/geocom-gis/gntools',
@@ -42,6 +44,10 @@ setup(
         ],
         install_requires=['gpf'],
         python_requires='>=2.7.14, <3',
+        tests_require=tests_require,
+        extras_require={
+            'test':  tests_require
+        },
         classifiers=[
             'Development Status :: 4 - Beta',  # "3 - Alpha", "4 - Beta" or "5 - Production/Stable"
             'Intended Audience :: Developers',
