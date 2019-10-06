@@ -34,9 +34,11 @@ sys.path.insert(0, os.path.abspath('..\\..'))
 
 # -- Project information -----------------------------------------------------
 
-project = u'gntools'
-copyright = u'2019, Geocom Informatik AG / VertiGIS, Burgdorf, Switzerland'
-author = u'Geocom Informatik AG'
+project = 'gntools'
+title = u'GEONIS Tools'
+description = u'GEONIS toolset for the Geocom Python Framework'
+author = u'Geocom Informatik AG / VertiGIS'
+copyright = u'2019, {}, Burgdorf, Switzerland'.format(author)
 
 # The full version, including alpha/beta/rc tags
 release = get_distribution(project).version
@@ -123,7 +125,7 @@ html_theme = 'sphinx_rtd_theme'
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'gntoolsdoc'
+htmlhelp_basename = '{}doc'.format(project)
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -150,8 +152,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'gntools.tex', u'GEONIS Tools Documentation',
-     u'Author', 'manual'),
+    (master_doc, '{}.tex'.format(project), u'{} Documentation'.format(title),
+     author, 'manual'),
 ]
 
 
@@ -160,7 +162,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'gntools', u'GEONIS Tools Documentation',
+    (master_doc, project, u'{} Documentation'.format(title),
      [author], 1)
 ]
 
@@ -171,9 +173,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'gntools', u'GEONIS Tools Documentation',
-     author, 'gntools', 'One line description of project.',
-     'Miscellaneous'),
+    (master_doc, project, u'{} Documentation'.format(title),
+     author, project, description, 'Miscellaneous'),
 ]
 
 
