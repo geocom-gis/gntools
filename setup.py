@@ -47,7 +47,7 @@ setup(
         python_requires='>=2.7.14, <3',
         tests_require=tests_require,
         extras_require={
-            'test':  tests_require
+            'test': tests_require
         },
         classifiers=[
             'Development Status :: 4 - Beta',  # "3 - Alpha", "4 - Beta" or "5 - Production/Stable"
