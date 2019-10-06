@@ -29,8 +29,8 @@
 #
 import os
 import sys
+from pkg_resources import get_distribution
 sys.path.insert(0, os.path.abspath('..\\..'))
-
 
 # -- Project information -----------------------------------------------------
 
@@ -38,11 +38,10 @@ project = u'gntools'
 copyright = u'2019, Geocom Informatik AG / VertiGIS, Burgdorf, Switzerland'
 author = u'Geocom Informatik AG'
 
-# The short X.Y version
-version = u'0.1'
 # The full version, including alpha/beta/rc tags
-release = u'0.1 Beta'
-
+release = get_distribution(project).version
+# The short X.Y version
+version = u'.'.join(release.split('.')[:2])
 
 # -- General configuration ---------------------------------------------------
 
