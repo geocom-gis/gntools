@@ -13,9 +13,9 @@ Welcome to GEONIS Tools
     :alt: PyPI homepage
     :target: https://pypi.org/project/gntools
 
-.. |build| image:: https://img.shields.io/appveyor/ci/geonis-github/gntools?logo=appveyor
+.. |build| image:: https://img.shields.io/appveyor/ci/geocom/gntools?logo=appveyor
     :alt: AppVeyor
-    :target: https://ci.appveyor.com/project/GEONIS-GITHUB/gntools
+    :target: https://ci.appveyor.com/project/geocom/gntools
 
 .. |issues| image:: https://img.shields.io/github/issues-raw/geocom-gis/gntools?logo=github
     :alt: GitHub issues
