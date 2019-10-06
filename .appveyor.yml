@@ -61,11 +61,11 @@ after_test:
 
 artifacts:
   # Python distributions can be found in the dist directory
-  - path: dist\\*
+  - path: 'dist\*'
     name: pypi_releases
 
 deploy:
-  # Deploy release to GitHub only when PUBLISH is true
+  # Add release draft to GitHub only when PUBLISH is true
   - provider: GitHub
     auth_token:
       secure: lXMk68xShK4caI5U+BjFHnFXSgcXIubv3WlyzbQ50YbyKzcqnhgyFj4FN723j4sK
