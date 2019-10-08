@@ -20,7 +20,7 @@ Module that facilitates working with GEONIS Generalized Plans (*GP* or *"Planwel
 
 import gpf.common.textutils as _tu
 import gpf.common.validate as _vld
-import gpf.tools.workspace as _ws
+import gpf.paths as _paths
 
 
 class PlanHelper:
@@ -36,12 +36,12 @@ class PlanHelper:
                             For user plans (where numeric part >= 1000), the *U_* prefix can be omitted
                             if the field names should **not** have this prefix.
     :param workspace:       An optional Esri workspace path (``str``) or a
-                            :class:`gpf.tools.workspace.WorkspaceManager` instance.
+                            :class:`gpf.paths.Workspace` instance.
                             When specified, the :func:`get_feature_class` and :func:`get_feature_dataset` functions
                             will return full paths instead of just the names.
     :keyword user_prefix:   The prefix for custom user plans (where numeric part >= 1000). Defaults to *U*.
     :type plan:             str, unicode
-    :type workspace:        str, unicode, gpf.tools.workspace.WorkspaceManager
+    :type workspace:        str, unicode, gpf.paths.Workspace
     :type user_prefix:      str, unicode
 
     If you initialize the ``PlanHelper`` with a workspace, full paths will be returned:
@@ -71,7 +71,7 @@ class PlanHelper:
         'U_ELE_PW1001'
         >>> gph.get_field_name('MyField')   # But by default, the U_ prefix will **not** be added to field names
         'MYFIELD1000'
-        >>> gph = PlanHelper('u_pw1002')  # Now we deliberately add the U_ prefix
+        >>> gph = PlanHelper('u_pw1002')    # Now we deliberately add the U_ prefix
         >>> gph.get_feature_dataset('was')  # This does not affect feature dataset and feature class names
         'U_ELE_PW1002'
         >>> gph.get_field_name('MyField')   # But it does affect the field name
@@ -92,8 +92,7 @@ class PlanHelper:
         self._pfx_fields = False
 
         if workspace:
-            self._wsman = workspace if isinstance(workspace, _ws.WorkspaceManager) \
-                else _ws.WorkspaceManager(workspace)
+            self._wsman = workspace if isinstance(workspace, _paths.Workspace) else _paths.Workspace(workspace)
 
         self._parse(plan, kwargs.get(self.__ARG_PFX, self.__USER_PFX).upper())
 
@@ -126,7 +125,7 @@ class PlanHelper:
         return func_wrapper
 
     def _make_path(self, *parts):
-        return self._wsman.construct(*parts)
+        return self._wsman.make_path(*parts)
 
     @_uppercase
     def _fds_name(self, fds_base):
@@ -148,7 +147,7 @@ class PlanHelper:
             # fc_base is a single word or it starts with fds_base
             return fds_name, _tu.EMPTY_STR.join((fds_name, self.__PLAN_SEP, fc_parts[-1]))
 
-        # replace first part with GP name prefix and join all parts
+        # replace first part with GP name prefix and concat all parts
         fc_parts[0] = self._fds_name(fc_parts[0])
         return fds_name, self.__PLAN_SEP.join(fc_parts)
 

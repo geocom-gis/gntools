@@ -27,42 +27,9 @@ from warnings import warn as _warn
 
 import gpf.common.textutils as _tu
 import gpf.common.validate as _vld
-import gpf.tools.workspace as _ws
+import gpf.paths as _paths
 
 EMPTY_ARG = _tu.HASH
-
-
-def clean_arg(value, default):
-    """
-    Strips all trailing quotes and NoData (#) values from text.
-
-    :param value:   The argument value that should be evaluated. If this is not a string, it will be passed as-is.
-    :param default: The default value that should be returned if the value is a NoData string (#).
-    """
-    if isinstance(value, basestring):
-        value = value.strip('"\'')
-    return default if value == EMPTY_ARG else value
-
-
-def eval_arg(value, default):
-    """
-    Evaluates a literal string as a Python object in a safe manner.
-
-    :param value:       The string that should be evaluated. If it is not a string, the *default* value is returned.
-    :param default:     The default value to return if evaluation failed.
-    :type value:        str, unicode
-    :raises TypeError:  When the evaluated object does not have the same type as the *default* value.
-                        This error can only be raised when *default* is not ``None``.
-    """
-    try:
-        obj = _ast_eval(value)
-    except (ValueError, TypeError, SyntaxError):
-        return default
-    return_type = basestring if isinstance(default, basestring) else type(default)
-    if default is not None and not isinstance(obj, return_type):
-        raise TypeError('Argument value should evaluate to a {} (got {})'.
-                        format(return_type.__name__, type(obj).__name__))
-    return obj
 
 
 class ParameterWarning(UserWarning):
@@ -202,14 +169,14 @@ class _BaseArgParser(object):
     @property
     def workspace(self):
         """
-        Returns a :class:`gpf.tools.workspace.WorkspaceManager` instance for the Esri workspace
+        Returns a :class:`gpf.paths.Workspace` instance for the Esri workspace
         (and optionally a qualifier) specified in the script arguments.
 
-        :rtype:    gpf.tools.workspace.WorkspaceManager
+        :rtype:    gpf.paths.Workspace
         """
         qualifier = self._store.get(self._DB_QUALIFIER, _tu.EMPTY_STR)
         ws_path = self._store.get(self._WORKSPACE_PATH)
-        return _ws.WorkspaceManager(ws_path, qualifier)
+        return _paths.Workspace(ws_path, qualifier)
 
     @property
     def project_vars(self):
@@ -372,3 +339,36 @@ class FormArgParser(_BaseArgParser):
         :rtype: str
         """
         return self._store.get(self._ID_VALUE)
+
+
+def clean_arg(value, default):
+    """
+    Strips all trailing quotes and NoData (#) values from text.
+
+    :param value:   The argument value that should be evaluated. If this is not a string, it will be passed as-is.
+    :param default: The default value that should be returned if the value is a NoData string (#).
+    """
+    if isinstance(value, basestring):
+        value = value.strip('"\'')
+    return default if value == EMPTY_ARG else value
+
+
+def eval_arg(value, default):
+    """
+    Evaluates a literal string as a Python object in a safe manner.
+
+    :param value:       The string that should be evaluated. If it is not a string, the *default* value is returned.
+    :param default:     The default value to return if evaluation failed.
+    :type value:        str, unicode
+    :raises TypeError:  When the evaluated object does not have the same type as the *default* value.
+                        This error can only be raised when *default* is not ``None``.
+    """
+    try:
+        obj = _ast_eval(value)
+    except (ValueError, TypeError, SyntaxError):
+        return default
+    return_type = basestring if isinstance(default, basestring) else type(default)
+    if default is not None and not isinstance(obj, return_type):
+        raise TypeError('Argument value should evaluate to a {} (got {})'.
+                        format(return_type.__name__, type(obj).__name__))
+    return obj

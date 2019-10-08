@@ -22,7 +22,7 @@ import os as _os
 from xml.etree import cElementTree as _ETree
 
 import gpf.common.textutils as _tu
-import gpf.tools.workspace as _ws
+import gpf.paths as _paths
 
 _GN_XMLTAG_PARAM = 'param'
 _GN_XMLTAG_KEY = 'key'
@@ -33,7 +33,7 @@ _GN_XMLKEY_SDEF = 'sdefile'
 _GN_XMLKEY_QLFR = 'qualifier'
 
 
-class Datasource(_ws.WorkspaceManager):
+class Datasource(_paths.Workspace):
     """
     Datasource(datasource)
 
@@ -41,18 +41,18 @@ class Datasource(_ws.WorkspaceManager):
     for elements (tables, feature datasets etc.) in an Esri workspace.
     To GEONIS, an Esri Workspace means an SDE connection file or a local File/Personal Geodatabase.
 
-    :param datasource:  The full GEONIS Datasource XML file path.
-    :type datasource:   str, unicode
+    :param xml_path:    The full GEONIS Datasource XML file path.
+    :type xml_path:     str, unicode
     :raises ValueError: If the GEONIS Datasource XML does not exist or failed to parse.
 
-    .. note::           All methods listed below are inherited from :class:`gpf.tools.workspace.WorkspaceManager`.
+    .. note::           All class methods are inherited from :class:`gpf.paths.Workspace`.
                         Only the initialization process of the *Datasource* is different.
-                        Generally speaking, users will find the :func:`find_path` and :func:`construct` functions
+                        Generally speaking, users will find the :func:`find_path` and :func:`make_path` functions
                         most useful.
     """
 
-    def __init__(self, datasource):
-        db_dir, db_file, qualifier = self._read_params(datasource)
+    def __init__(self, xml_path):
+        db_dir, db_file, qualifier = self._read_params(xml_path)
         super(Datasource, self).__init__(db_file, qualifier, db_dir)
 
     @staticmethod
