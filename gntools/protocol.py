@@ -30,7 +30,7 @@ from xml.etree import cElementTree as _xml
 import gpf.common.guids as _guids
 import gpf.common.textutils as _tu
 import gpf.common.validate as _vld
-import gpf.tools.workspace as _ws
+import gpf.paths as _paths
 import gntools.common.geometry as _geometry
 
 _GNLOG_ENCODING = 'iso-8859-1'
@@ -64,7 +64,7 @@ _TAG_CFUNC = 'CustomFunctions'
 _TAG_FEATURE = 'feature'
 _TAG_DATAID = 'dataid'
 
-# Define constants for get_delphi_time() function
+# Define constants for _get_delphi_time() function
 _DELPHI_EPOCH = _timegm(_dt(1899, 12, 30).timetuple())
 _TZ_OFFSET = _mktime(_dt.now().utctimetuple()) - _mktime(_dt.utcnow().utctimetuple())
 _DAY_SECONDS = _td(days=1).total_seconds()
@@ -74,7 +74,7 @@ _time_cache = {}
 _table_cache = {}
 
 
-def get_delphi_time(time=None):
+def _get_delphi_time(time=None):
     """
     Gets the current time (optionally, for a given time) expressed as a formatted floating point string for Delphi.
 
@@ -138,7 +138,7 @@ class Feature(object):
         try:
             workspace = _table_cache[table]
         except KeyError:
-            workspace = _ws.WorkspaceManager.get_root(self._table)
+            workspace = _paths.Workspace.get_root(self._table)
         return workspace, table.split(_tu.DOT)[-1]
 
     def _get_dataid_attrs(self):
@@ -181,29 +181,25 @@ class Feature(object):
 
 class Logger(object):
     """
-    Logger({project_path}, {output_path}, {encoding})
+    Logger class to write GEONIS XML protocols (e.g. for validations, reporting etc.).
 
-    Logger class to write GEONIS XML protocols (e.g. for validations etc.).
-
-    The *project_path* argument must be set on the first ``Logger`` call.
-    Since Logger is a singleton, instantiating it multiple times will always return the same object
-    if the class is initialized without arguments (*project_path* = ``None``).
+    .. note::   Because Logger is a singleton, instantiating it multiple times will always refer to the same object.
+                The Logger stores an XML root element, to which all Logger instances write.
+                Once an instance has called the :func:`flush` method, the XML root element will be reset.
+                Calling :func:`flush` will set the project name and path and write out the XML file.
+                After this call, remaining Logger instances or new ones will simply write into a new XML root element.
     """
 
-    __slots__ = '_root', '_prj_path', '_prj_name'
+    __slots__ = '_root',
     __instance = None
 
-    def __new__(cls, project_path=None):
+    def __new__(cls):
 
-        if cls.__instance is not None and project_path is None:
+        if cls.__instance is not None:
             return cls.__instance
 
-        _vld.pass_if(project_path, TypeError,
-                     '{!r} must be instantiated with a `project_path` argument'.format(cls.__name__))
-
         Logger.__instance = object.__new__(cls)
-        Logger.__instance._prj_path, Logger.__instance._prj_name = cls._get_project(project_path)
-        Logger.__instance._set_root()
+        Logger.__instance._new_root()
         return Logger.__instance
 
     @staticmethod
@@ -218,7 +214,7 @@ class Logger(object):
         """
         entry_attrs = {
             _ATTR_MSGTYPE:  str(msg_type),
-            _ATTR_DATE:     get_delphi_time(),
+            _ATTR_DATE:     _get_delphi_time(),
             _ATTR_LASTMOD:  str(0),
             _ATTR_READONLY: str(False).lower()  # TODO??
         }
@@ -227,20 +223,33 @@ class Logger(object):
         return entry_attrs
 
     @staticmethod
-    def _get_project(project_path):
+    def _split_prj(project_path):
         """ Returns a ``tuple`` of (project directory, project name) for the specified *project_path*. """
-        if not project_path:
-            return None, None
-        project_dir, project_name = _os.path.split(project_path)
-        # By adding an empty string, we ensure that a slash is added at the end of the path
-        return _os.path.join(_os.path.realpath(project_dir.strip()), _tu.EMPTY_STR), project_name
 
-    def _set_root(self):
-        """ Creates and sets the root element for the GEONIS XML Protocol file. """
-        root = _xml.Element(_TAG_ROOT)
-        root.set(_ATTR_PRJROOT, self._prj_path)
-        root.set(_ATTR_PRJNAME, self._prj_name)
-        self._root = root
+        # Project path cannot be None
+        _vld.pass_if(project_path, ValueError, 'Project path must be set')
+
+        prj_dir, prj_name = _os.path.split(project_path)
+
+        # By adding an empty string, we ensure that a slash is added at the end of the path (= protocol spec)
+        return _os.path.join(_os.path.realpath(prj_dir.strip()), _tu.EMPTY_STR), prj_name
+
+    def _new_root(self):
+        """
+        (Re)sets the root element for the GEONIS XML Protocol file.
+        """
+        self._root = _xml.Element(_TAG_ROOT)
+
+    def _set_project(self, project_path):
+        """ Sets the root element attributes (project directory and name). """
+        prj_dir, prj_name = self._split_prj(project_path)
+
+        # Last check if both project settings are present
+        _vld.pass_if(prj_dir and prj_name, ValueError, 'Failed to retrieve project directory and name')
+
+        # Set root project attributes
+        self._root.set(_ATTR_PRJROOT, prj_dir)
+        self._root.set(_ATTR_PRJROOT, prj_name)
 
     def _add_entry(self, msg, msg_type, gn_feature=None, function=None):
         """
@@ -305,7 +314,7 @@ class Logger(object):
         :param message:     Text message to log.
         :param gn_feature:  Feature object to add to the log entry.
         :type message:      str, unicode
-        :type gn_feature:   gntools.core.protocol.Feature
+        :type gn_feature:   ~gntools.protocol.Feature
         """
         self._add_entry(message, _GNLOG_TYPE_MESSAGE, gn_feature)
 
@@ -316,7 +325,7 @@ class Logger(object):
         :param message:     Text message to log.
         :param gn_feature:  Feature object to add to the log entry.
         :type message:      str, unicode
-        :type gn_feature:   gntools.core.protocol.Feature
+        :type gn_feature:   ~gntools.protocol.Feature
         """
         self._add_entry(message, _GNLOG_TYPE_NOTICE, gn_feature)
 
@@ -327,7 +336,7 @@ class Logger(object):
         :param message:     Text message to log.
         :param gn_feature:  Feature object to add to the log entry.
         :type message:      str, unicode
-        :type gn_feature:   gntools.core.protocol.Feature
+        :type gn_feature:   ~gntools.protocol.Feature
         """
         self._add_entry(message, _GNLOG_TYPE_WARNING, gn_feature)
 
@@ -338,7 +347,7 @@ class Logger(object):
         :param message:     Text message to log.
         :param gn_feature:  Feature object to add to the log entry.
         :type message:      str, unicode
-        :type gn_feature:   gntools.core.protocol.Feature
+        :type gn_feature:   ~gntools.protocol.Feature
         """
         self._add_entry(message, _GNLOG_TYPE_FAILURE, gn_feature)
 
@@ -353,7 +362,7 @@ class Logger(object):
         :param message:     Text message to log.
         :param gn_feature:  Feature object to add to the log entry.
         :type message:      str, unicode
-        :type gn_feature:   gntools.core.protocol.Feature
+        :type gn_feature:   ~gntools.protocol.Feature
         """
         self._add_entry(message, _GNLOG_TYPE_HEADER1, gn_feature)
 
@@ -364,28 +373,38 @@ class Logger(object):
         :param message:     Text message to log.
         :param gn_feature:  Feature object to add to the log entry.
         :type message:      str, unicode
-        :type gn_feature:   gntools.core.protocol.Feature
+        :type gn_feature:   ~gntools.protocol.Feature
         """
         self._add_entry(message, _GNLOG_TYPE_HEADER2, gn_feature)
 
-    def flush(self, output_path, encoding=None):
+    def flush(self, output_path, project_path, encoding=None):
         """
-        Flushes the XML element buffer and writes the GEONIS Protocol to a file.
+        Flushes the root element buffer and writes the GEONIS Protocol to an XML file.
 
-        Once this function is called, you can reuse the Logger for the same project.
-        If you want to start logging for a another project, re-initialize the Logger with a new project path.
+        Once this function is called, the root element has been reset and you can reuse the Logger
+        for another project or the same one, or you can exit your application.
 
         :param output_path:     The full path to the output protocol XML that should be written.
+        :param project_path:    The full path to the GEONIS project to which the protocol applies.
         :keyword encoding:      Optional encoding to use for the protocol file (default = ISO-8859-1).
         :type output_path:      str, unicode
+        :type project_path:     str, unicode
         :type encoding:         str, unicode
 
         .. warning::            The user must have write access in the specified output directory.
         """
+
+        # Set path and check directory of XML
         xml_path = _os.path.realpath(output_path.strip())
         dirname, filename = _os.path.split(xml_path)
         if not _os.path.isdir(dirname):
             _os.makedirs(dirname)
 
+        # Set project root attributes
+        self._set_project(project_path)
+
+        # Write XML
         self._write_tree(output_path, encoding)
-        self._set_root()
+
+        # Re-instantiate the root element
+        self._new_root()
