@@ -20,7 +20,7 @@ from collections import OrderedDict
 import pytest
 
 from gpf.tools.workspace import WorkspaceManager
-from gntools.core.parsers import *
+from gntools.parsers import *
 
 
 # noinspection PyTypeChecker

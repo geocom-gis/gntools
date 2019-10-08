@@ -17,7 +17,7 @@
 import pytest
 
 from gpf.tools.workspace import WorkspaceManager
-from gntools.core.plans import *
+from gntools.plans import *
 
 
 @pytest.mark.parametrize('arg', [None, '', 1, 'PW', '7'])
