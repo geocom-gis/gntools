@@ -55,8 +55,8 @@ install:
   # Upgrading pip itself might (sometimes?) fail due to permissions
   - pip install --upgrade --disable-pip-version-check setuptools wheel twine
 
-  # Install the project and its dependencies
-  - pip install --disable-pip-version-check -e .[test]
+  # Install the project and its (upgraded) dependencies
+  - pip install --disable-pip-version-check --upgrade -e .[test]
 
 cache:
   - '%LOCALAPPDATA%\pip\Cache'
