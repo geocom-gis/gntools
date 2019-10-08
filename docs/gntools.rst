@@ -7,7 +7,13 @@ Subpackages
 .. toctree::
 
     gntools.common
-    gntools.datasource
+
+Submodules
+----------
+
+.. toctree::
+
+    gntools.datasources
     gntools.parsers
     gntools.plans
     gntools.protocol
