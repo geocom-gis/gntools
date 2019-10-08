@@ -1,7 +1,7 @@
-gntools.core.plans module
-=========================
+gntools.plans module
+====================
 
-.. automodule:: gntools.core.plans
+.. automodule:: gntools.plans
     :members:
     :undoc-members:
     :show-inheritance:

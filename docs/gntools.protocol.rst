@@ -1,7 +1,7 @@
-gntools.core.protocol module
-============================
+gntools.protocol module
+=======================
 
-.. automodule:: gntools.core.protocol
+.. automodule:: gntools.protocol
     :members:
     :undoc-members:
     :show-inheritance:

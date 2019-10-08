@@ -33,9 +33,9 @@ _GN_XMLKEY_SDEF = 'sdefile'
 _GN_XMLKEY_QLFR = 'qualifier'
 
 
-class DatasourceManager(_ws.WorkspaceManager):
+class Datasource(_ws.WorkspaceManager):
     """
-    DatasourceManager(datasource)
+    Datasource(datasource)
 
     Helper class to read a GEONIS Datasource XML, so that the user is able to generate fully qualified paths
     for elements (tables, feature datasets etc.) in an Esri workspace.
@@ -46,14 +46,14 @@ class DatasourceManager(_ws.WorkspaceManager):
     :raises ValueError: If the GEONIS Datasource XML does not exist or failed to parse.
 
     .. note::           All methods listed below are inherited from :class:`gpf.tools.workspace.WorkspaceManager`.
-                        Only the initialization process of the *DatasourceManager* is different.
+                        Only the initialization process of the *Datasource* is different.
                         Generally speaking, users will find the :func:`find_path` and :func:`construct` functions
                         most useful.
     """
 
     def __init__(self, datasource):
         db_dir, db_file, qualifier = self._read_params(datasource)
-        super(DatasourceManager, self).__init__(db_file, qualifier, db_dir)
+        super(Datasource, self).__init__(db_file, qualifier, db_dir)
 
     @staticmethod
     def _parse_xml(xml_path):

@@ -1,7 +1,7 @@
-gntools.core.datasource module
-==============================
+gntools.datasource module
+=========================
 
-.. automodule:: gntools.core.datasource
+.. automodule:: gntools.datasource
     :members:
     :show-inheritance:
     :inherited-members: WorkspaceManager

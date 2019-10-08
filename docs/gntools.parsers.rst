@@ -1,7 +1,7 @@
-gntools.core.parsers module
-===========================
+gntools.parsers module
+======================
 
-.. automodule:: gntools.core.parsers
+.. automodule:: gntools.parsers
     :members:
     :undoc-members:
     :show-inheritance:
