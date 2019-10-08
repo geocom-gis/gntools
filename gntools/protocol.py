@@ -106,11 +106,11 @@ def get_delphi_time(time=None):
     return delphi_time
 
 
-class ProtocolFeature(object):
+class Feature(object):
     """
-    ProtocolFeature(table, global_id, {geometry}, {globalid_field})
+    Feature(table, global_id, {geometry}, {globalid_field})
 
-    Creates a ProtocolFeature for GEONIS Protocol logging purposes.
+    Creates a Feature for GEONIS Protocol logging purposes.
 
     :param table:               The full path to the table or feature class that contains the logged feature.
     :param global_id:           GlobalID value of the logged feature.
@@ -162,7 +162,7 @@ class ProtocolFeature(object):
     @property
     def fid(self):
         """
-        Returns the (validated) GlobalID of the current ProtocolFeature feature.
+        Returns the (validated) GlobalID of the current Feature feature.
 
         :rtype: str
         """
@@ -170,7 +170,7 @@ class ProtocolFeature(object):
 
     def write_elements(self, parent_element):
         """
-        Adds a <feature> XML element to the *parent_element* based on the current ProtocolFeature values.
+        Adds a <feature> XML element to the *parent_element* based on the current Feature values.
 
         :param parent_element:  Element
         """
@@ -179,14 +179,14 @@ class ProtocolFeature(object):
         self._add_geometry(parent_element)
 
 
-class ProtocolLogger(object):
+class Logger(object):
     """
-    ProtocolLogger({project_path}, {output_path}, {encoding})
+    Logger({project_path}, {output_path}, {encoding})
 
     Logger class to write GEONIS XML protocols (e.g. for validations etc.).
 
-    The *project_path* argument must be set on the first ``ProtocolLogger`` call.
-    Since ProtocolLogger is a singleton, instantiating it multiple times will always return the same object
+    The *project_path* argument must be set on the first ``Logger`` call.
+    Since Logger is a singleton, instantiating it multiple times will always return the same object
     if the class is initialized without arguments (*project_path* = ``None``).
     """
 
@@ -201,10 +201,10 @@ class ProtocolLogger(object):
         _vld.pass_if(project_path, TypeError,
                      '{!r} must be instantiated with a `project_path` argument'.format(cls.__name__))
 
-        ProtocolLogger.__instance = object.__new__(cls)
-        ProtocolLogger.__instance._prj_path, ProtocolLogger.__instance._prj_name = cls._get_project(project_path)
-        ProtocolLogger.__instance._set_root()
-        return ProtocolLogger.__instance
+        Logger.__instance = object.__new__(cls)
+        Logger.__instance._prj_path, Logger.__instance._prj_name = cls._get_project(project_path)
+        Logger.__instance._set_root()
+        return Logger.__instance
 
     @staticmethod
     def _get_attrs(msg, msg_type):
@@ -305,7 +305,7 @@ class ProtocolLogger(object):
         :param message:     Text message to log.
         :param gn_feature:  Feature object to add to the log entry.
         :type message:      str, unicode
-        :type gn_feature:   gntools.core.protocol.ProtocolFeature
+        :type gn_feature:   gntools.core.protocol.Feature
         """
         self._add_entry(message, _GNLOG_TYPE_MESSAGE, gn_feature)
 
@@ -316,7 +316,7 @@ class ProtocolLogger(object):
         :param message:     Text message to log.
         :param gn_feature:  Feature object to add to the log entry.
         :type message:      str, unicode
-        :type gn_feature:   gntools.core.protocol.ProtocolFeature
+        :type gn_feature:   gntools.core.protocol.Feature
         """
         self._add_entry(message, _GNLOG_TYPE_NOTICE, gn_feature)
 
@@ -327,7 +327,7 @@ class ProtocolLogger(object):
         :param message:     Text message to log.
         :param gn_feature:  Feature object to add to the log entry.
         :type message:      str, unicode
-        :type gn_feature:   gntools.core.protocol.ProtocolFeature
+        :type gn_feature:   gntools.core.protocol.Feature
         """
         self._add_entry(message, _GNLOG_TYPE_WARNING, gn_feature)
 
@@ -338,7 +338,7 @@ class ProtocolLogger(object):
         :param message:     Text message to log.
         :param gn_feature:  Feature object to add to the log entry.
         :type message:      str, unicode
-        :type gn_feature:   gntools.core.protocol.ProtocolFeature
+        :type gn_feature:   gntools.core.protocol.Feature
         """
         self._add_entry(message, _GNLOG_TYPE_FAILURE, gn_feature)
 
@@ -353,7 +353,7 @@ class ProtocolLogger(object):
         :param message:     Text message to log.
         :param gn_feature:  Feature object to add to the log entry.
         :type message:      str, unicode
-        :type gn_feature:   gntools.core.protocol.ProtocolFeature
+        :type gn_feature:   gntools.core.protocol.Feature
         """
         self._add_entry(message, _GNLOG_TYPE_HEADER1, gn_feature)
 
@@ -364,7 +364,7 @@ class ProtocolLogger(object):
         :param message:     Text message to log.
         :param gn_feature:  Feature object to add to the log entry.
         :type message:      str, unicode
-        :type gn_feature:   gntools.core.protocol.ProtocolFeature
+        :type gn_feature:   gntools.core.protocol.Feature
         """
         self._add_entry(message, _GNLOG_TYPE_HEADER2, gn_feature)
 
@@ -372,8 +372,8 @@ class ProtocolLogger(object):
         """
         Flushes the XML element buffer and writes the GEONIS Protocol to a file.
 
-        Once this function is called, you can reuse the ProtocolLogger for the same project.
-        If you want to start logging for a another project, re-initialize the ProtocolLogger with a new project path.
+        Once this function is called, you can reuse the Logger for the same project.
+        If you want to start logging for a another project, re-initialize the Logger with a new project path.
 
         :param output_path:     The full path to the output protocol XML that should be written.
         :keyword encoding:      Optional encoding to use for the protocol file (default = ISO-8859-1).
