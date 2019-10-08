@@ -46,6 +46,9 @@ def test_menuargparser_bad():
     sys.argv = []
     with pytest.raises(AttributeError):
         MenuArgParser()
+    sys.argv = [__file__, 'workspace', 'qualifier', '#', '#', '#', '#']
+    with pytest.raises(IndexError):
+        MenuArgParser('Field0', 'Field1', 'Field2', 'Field3')
 
 
 # noinspection PyProtectedMember
@@ -77,6 +80,46 @@ def test_menuargparser_all():
     assert menu_params.arguments == (), 'arguments should be an empty tuple'
     assert menu_params.project_vars == {}, 'gv_vars should be an empty dictionary'
 
+    sys.argv = [__file__, 'workspace', 'qualifier', '#', '#', '#', '#']
+    menu_params = MenuArgParser()
+    assert menu_params.script == __file__
+    assert menu_params.workspace == WorkspaceManager('workspace', 'qualifier')
+    assert menu_params.arguments == (), 'arguments should be an empty tuple'
+    assert menu_params.project_vars == {}, 'gv_vars should be an empty dictionary'
+
+    menu_params = MenuArgParser('Field0', 'Field1')
+    assert menu_params.arguments == (None, None), 'arguments should be a tuple with 2 None values'
+    assert menu_params.project_vars == {}, 'gv_vars should be an empty dictionary'
+    menu_params_str = 'Script path: {}\n' \
+                      'Workspace path: workspace\n' \
+                      'Database qualifier: qualifier\n' \
+                      "Script parameters: (Field0=None, Field1=None)".format(__file__)
+    assert str(menu_params) == menu_params_str
+
+    sys.argv = [__file__, 'workspace', 'qualifier', '#', '#', '#', 'last']
+    with pytest.warns(ParameterWarning):
+        menu_params = MenuArgParser('Field0', 'Field1')
+    assert menu_params.arguments == (None, None), 'arguments should be a tuple with 2 None values'
+
+    sys.argv = [__file__, 'workspace', 'qualifier', '#', 'a']
+    menu_params = MenuArgParser('Field0', 'Field1', 'Field2')
+    assert menu_params.arguments.Field0 == 'a', 'first script argument value should be "a"'
+    assert menu_params.arguments == ('a', None, None), 'arguments should be a tuple with 3 values'
+    menu_params_str = 'Script path: {}\n' \
+                      'Workspace path: workspace\n' \
+                      'Database qualifier: qualifier\n' \
+                      "Script parameters: (Field0='a', Field1=None, Field2=None)".format(__file__)
+    assert str(menu_params) == menu_params_str
+
+    sys.argv = [__file__, 'workspace', 'qualifier', '#', 'a', 'b', 'c']
+    menu_params = MenuArgParser()
+    assert menu_params.arguments == ('a', 'b', 'c'), 'arguments should be a tuple with 3 values'
+    menu_params_str = 'Script path: {}\n' \
+                      'Workspace path: workspace\n' \
+                      'Database qualifier: qualifier\n' \
+                      "Script parameters: ('a', 'b', 'c')".format(__file__)
+    assert str(menu_params) == menu_params_str
+
     sys.argv = [__file__, 'workspace', 'qualifier', '#', 'a', '#', '"b"']
     menu_params = MenuArgParser('Field0', 'Field1', 'Field2')
     assert menu_params.arguments.Field0 == 'a'
@@ -84,10 +127,7 @@ def test_menuargparser_all():
     assert menu_params.arguments.Field2 == 'b', 'additional quotes must be stripped'
 
     sys.argv = [__file__, 'workspace', 'qualifier', '{"test": 1}', 'a', '"b"', "'#c'", 'omit']
-    with pytest.warns(Warning):
-        menu_params = MenuArgParser('Field0', 'Field1', 'Field2')
-    assert menu_params.script == __file__
-    assert menu_params.workspace == WorkspaceManager('workspace', 'qualifier')
+    menu_params = MenuArgParser('Field0', 'Field1', 'Field2')
     assert menu_params.arguments == ('a', 'b', '#c')
     assert menu_params.project_vars == {'test': 1}
     menu_params_str = 'Script path: {}\n' \

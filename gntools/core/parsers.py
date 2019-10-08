@@ -65,6 +65,11 @@ def eval_arg(value, default):
     return obj
 
 
+class ParameterWarning(UserWarning):
+    """ Warning that is displayed when a (minor) issue occurred while parsing the script parameters. """
+    pass
+
+
 class _ArgMap(object):
     """
     Argument mapping helper class for the argument parsers.
@@ -83,27 +88,27 @@ class _ArgMap(object):
         self.name = name
         self.default = default
         self.required = required
+        self.func = clean_arg
         if callable(func):
             f = func
-            req_args = clean_arg.func_code.co_argcount
+            req_args = self.func.func_code.co_argcount
             num_args = req_args
             if hasattr(func, 'im_func'):
+                # function is part of a class (has 'self' argument): reset f to im_func and increment num_args by 1
                 f = func.im_func
                 num_args += 1
             if hasattr(f, 'func_code') and f.func_code.co_argcount == num_args:
+                # argument count matches the clean_arg() function: override self.func
                 self.func = func
             else:
                 raise ValueError('Argument function requires {} input arguments'.format(req_args))
-        else:
-            self.func = clean_arg
-        self.func = func if callable(func) else clean_arg
 
 
 class _BaseArgParser(object):
-    """ Base data class that stores the Python arguments for all GEONIS scripts. """
+    """ Abstract base data class that stores the Python arguments for all GEONIS scripts. """
 
     __metaclass__ = _abc.ABCMeta
-    __slots__ = ('_store', '_paramnames', '_paramtype')
+    __slots__ = ('_store', '_paramnames', '_paramtuple')
 
     _SCRIPT_PATH = 'script path'
     _WORKSPACE_PATH = 'workspace path'
@@ -118,28 +123,49 @@ class _BaseArgParser(object):
     def __init__(self, *param_names):
         self._store = _ODict()
         self._paramnames = param_names
+
         _vld.pass_if(len(param_names) <= self._MAX_PARAMS, IndexError,
                      'There can be no more than {} custom parameters'.format(self._MAX_PARAMS))
-        self._paramtype = _ntuple(self._format_typename(self._PARAM_CONST), param_names)
+
+        if self._paramnames:
+            # Declare a new ScriptParameters named tuple type and override its str() behavior
+            typename = self._get_typename(self._PARAM_CONST)
+            self._paramtuple = _ntuple(typename, field_names=param_names)
+            self._paramtuple.__str__ = lambda x: repr(x).replace(typename, _tu.EMPTY_STR)
+        else:
+            # Use a regular tuple type if no parameter names have been set
+            self._paramtuple = tuple
 
     @_abc.abstractproperty
     def _mapping(self):
         return ()
 
     @staticmethod
-    def _format_typename(value):
-        """ Formats a name as a class/type-like name. """
+    def _get_typename(value):
+        """ Formats a text string like a class/type name (Pascal case), e.g. 'my type' becomes 'MyType'. """
         return value.title().replace(_tu.SPACE, _tu.EMPTY_STR)
 
     def _save_params(self, values):
-        """ Validates and stores script parameters as a namedtuple. """
+        """
+        Validates and stores script parameters as a namedtuple (or regular tuple if param names are undefined).
+        """
         num_values = len(values)
         num_params = len(self._paramnames)
-        if num_values > num_params:
-            # If there are more than *num_params*, inform the user
-            _warn('Number of {} exceeds the expected total of {}'.format(self._PARAM_CONST, self._MAX_PARAMS))
-        # Truncate (and "zerofill") number of parameters to the number expected
-        return self._paramtype(*((values[i] if i < num_values else None) for i in range(num_params)))
+
+        if num_params:
+            # User has defined parameter names
+            if num_values > num_params and any(values):
+                # If there are more arguments (with a value) than parameter names, inform the user
+                _warn('Number of {} exceeds the expected total of {}'.
+                      format(self._PARAM_CONST, self._MAX_PARAMS), ParameterWarning)
+
+            # Truncate or fill (with None) the number of parameters to the expected number
+            # and return a new ScriptParameters namedtuple instance
+            return self._paramtuple(*((values[i] if i < num_values else None) for i in range(num_params)))
+
+        else:
+            # No parameter names have been set by the user: populate and return a regular tuple for non-empty values
+            return self._paramtuple(v for v in values if v)
 
     # noinspection PyProtectedMember, PyUnresolvedReferences
     def _parse(self):
@@ -148,19 +174,18 @@ class _BaseArgParser(object):
         for i, m in enumerate(self._mapping):
             try:
                 if m.name == self._PARAM_CONST and i == last_m:
-                    # If it's the last mapping for the script parameters, allow multiple values up to param names length
-                    value = self._save_params([m.func(x, None) for x in _sys.argv[i:]])
+                    # If it's the last mapping for the script parameters,
+                    # consume all remaining arguments and call mapping function on each script param.
+                    # Note that there can not be more than self._MAX_PARAMS and superfluous parameters are removed.
+                    value = self._save_params([m.func(x, m.default) for x in _sys.argv[i:i+self._MAX_PARAMS]])
                 else:
+                    # Call mapping function on the current argument
                     value = m.func(_sys.argv[i], m.default) or m.default
             except IndexError:
                 value = m.default
-            except TypeError:
-                if m.name == self._PARAM_CONST and i == last_m:
-                    value = self._paramtype(*(None for _ in self._paramnames))
-                else:
-                    raise
             except Exception:
                 raise
+
             if m.required and not _vld.has_value(value, True):
                 raise AttributeError('Empty or missing required {!r} argument at position {}'.format(m.name, i))
             self._store[m.name] = value
@@ -200,9 +225,9 @@ class _BaseArgParser(object):
         """
         Returns the arguments passed to the script (if defined in the GEONIS XML script configuration).
 
-        :rtype:     tuple
+        :return:    A namedtuple or tuple with additional script arguments (if any).
         """
-        return self._store.get(self._PARAMETERS, self._paramtype(*(None for _ in self._paramnames)))
+        return self._store.get(self._PARAMETERS, self._paramtuple(*(None for _ in self._paramnames)))
 
     def __repr__(self):
         """ Returns the representation of the current instance. """
@@ -214,16 +239,43 @@ class _BaseArgParser(object):
 
         :return str:    Formatted properties (1 per line).
         """
-        return _tu.LF.join('{}: {}'.format(_tu.capitalize(k), v) for
-                           k, v in self._store.iteritems() if _vld.has_value(v)).replace(
-                self._format_typename(self._PARAM_CONST), _tu.EMPTY_STR)
+
+        # Filter out empty properties and format key-value pairs (1 per line)
+        # Notice that ScriptParameters will have their type name removed, because its __str__ method has been overridden
+        return _tu.LF.join('{}: {}'.format(_tu.capitalize(k), v)
+                           for k, v in self._store.iteritems() if _vld.has_value(v))
 
 
 class MenuArgParser(_BaseArgParser):
     """
     Data class that reads and stores the Python arguments for GEONIS menu scripts.
-
     Simply instantiate this class in a menu-based Python script to get easy access to all arguments passed to it.
+
+    Script argument values are cleaned before they are returned,
+    which means that excessive single or double quotes will be removed.
+    Furthermore, any "#" values (representing NoData placeholders) are replaced by ``None``
+    and trailing NoData values are removed.
+
+    Using the GEONIS menu definition (XML), a user can pass additional parameters to the script.
+    These parameters do not have a name, but the MenuArgParser can name them for you
+    if it is initialized with one or more parameter names, so you can access them as a
+    ``namedtuple <https://docs.python.org/2/library/collections.html#collections.namedtuple>``_.
+
+    Example:
+
+        >>> params = MenuArgParser('arg1', 'arg2')
+        >>> params.arguments.arg1
+        'This value has been set in the GEONIS menu XML'
+        >>> params.arguments.arg2
+        'This is another argument'
+
+        >>> # Note that you can still get the arguments by index or unpack as a tuple
+        >>> params.arguments[1]
+        'This is another argument'
+        >>> params.arguments == ('This value has been set in the GEONIS menu XML', 'This is another argument')
+        True
+
+    If you don't specify any parameter names, the ``arguments`` property returns a regular ``tuple``.
     """
 
     def __init__(self, *param_names):
@@ -237,19 +289,40 @@ class MenuArgParser(_BaseArgParser):
             _ArgMap(self._WORKSPACE_PATH, required=True),  # 1
             _ArgMap(self._DB_QUALIFIER),  # 2
             _ArgMap(self._PROJECT_VARS, eval_arg, {}),  # 3
-            _ArgMap(self._PARAMETERS)  # 4, 5, 6
+            _ArgMap(self._PARAMETERS, default=None)  # 4, 5, 6
         )
 
 
 class FormArgParser(_BaseArgParser):
     """
     Data class that reads and stores the Python arguments for GEONIS form scripts.
-
     Simply instantiate this class in a form-based Python script to get easy access to all arguments passed to it.
 
     Script argument values are cleaned before they are returned,
     which means that excessive single or double quotes will be removed.
-    Furthermore, any "#" values (representing NoData placeholders) are replaced by ``None``.
+    Furthermore, any "#" values (representing NoData placeholders) are replaced by ``None``
+    and trailing NoData values are removed.
+
+    Using the GEONIS form definition (XML), a user can pass additional parameters to the script.
+    These parameters do not have a name, but the FormArgParser can name them for you
+    if it is initialized with one or more parameter names, so you can access them as a
+    ``namedtuple <https://docs.python.org/2/library/collections.html#collections.namedtuple>``_.
+
+    Example:
+
+        >>> params = FormArgParser('arg1', 'arg2')
+        >>> params.arguments.arg1
+        'This value has been set in the GEONIS form XML'
+        >>> params.arguments.arg2
+        'This is another argument'
+
+        >>> # Note that you can still get the arguments by index or unpack as a tuple
+        >>> params.arguments[1]
+        'This is another argument'
+        >>> params.arguments == ('This value has been set in the GEONIS form XML', 'This is another argument')
+        True
+
+    If you don't specify any parameter names, the ``arguments`` property returns a regular ``tuple``.
     """
 
     _TABLE_NAME = 'dataset name'
@@ -270,7 +343,7 @@ class FormArgParser(_BaseArgParser):
             _ArgMap(self._KEY_FIELD, required=True),  # 4
             _ArgMap(self._ID_VALUE, required=True),  # 5
             _ArgMap(self._PROJECT_VARS, eval_arg, {}),  # 6
-            _ArgMap(self._PARAMETERS)  # 7, 8, 9
+            _ArgMap(self._PARAMETERS, default=None)  # 7, 8, 9
         )
 
     @property
