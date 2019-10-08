@@ -24,7 +24,7 @@ import math as _math
 from xml.etree import cElementTree as _xml
 
 import gpf.common.validate as _vld
-from gpf.tools import arcpy as _arcpy
+from gpf import arcpy as _arcpy
 
 _JSON_NAN = 'NaN'
 _JSON_PATHS = 'paths'
@@ -63,7 +63,7 @@ _ATTR_ESTD = 'ellipseStd'
 _ATTR_EXT = 'isexterior'
 
 # Supported Esri geometry types
-# For all types: https://desktop.arcgis.com/en/arcobjects/latest/net/webframe.htm#esriGeometryType.htm
+# Reference: https://desktop.arcgis.com/en/arcobjects/latest/net/webframe.htm#esriGeometryType.htm
 ESRI_ENUM_POINT = 1
 ESRI_ENUM_POLYLINE = 3
 ESRI_ENUM_POLYGON = 4
@@ -74,6 +74,7 @@ ESRI_ENUM_CARC = 14
 ESRI_ENUM_BEZIER = 15
 ESRI_ENUM_EARC = 16
 
+# Use fairly accurate tolerance, so we don't screw up the arcs (midpoints)
 XY_TOLERANCE = 1e-09
 
 
@@ -451,6 +452,8 @@ def serialize(geometry):
     :type geometry:     Geometry, str, unicode, tuple, list
     :return:            An XML 'Geometry' element.
     :rtype:             Element
+
+    .. seealso::        :class:`~gntools.protocol.Logger`, :class:`~gntools.protocol.Feature`
     """
 
     try:
