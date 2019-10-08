@@ -16,7 +16,7 @@
 
 import pytest
 
-from gpf.tools.workspace import WorkspaceManager
+from gpf.paths import Workspace
 from gntools.plans import *
 
 
@@ -33,7 +33,7 @@ def test_gnplanhelper_bad(arg):
     (('pw1', r'C:/temp/test.gdb', {}),
      'PW1', 'C:\\temp\\test.gdb\\ELE_PW1', 'C:\\temp\\test.gdb\\ELE_PW1\\ELE_PW1_KABEL',
      'C:\\temp\\test.gdb\\SEW_PW1\\AWK_PW1_HALTUNG', 'TRASSE_REF1'),
-    (('pw2', WorkspaceManager(r'C:/temp/test.gdb'), {}),
+    (('pw2', Workspace(r'C:/temp/test.gdb'), {}),
      'PW2', 'C:\\temp\\test.gdb\\ELE_PW2', 'C:\\temp\\test.gdb\\ELE_PW2\\ELE_PW2_KABEL',
      'C:\\temp\\test.gdb\\SEW_PW2\\AWK_PW2_HALTUNG', 'TRASSE_REF2'),
     ('U_PW7', 'PW7', 'ELE_PW7', 'ELE_PW7_KABEL', 'AWK_PW7_HALTUNG', 'TRASSE_REF7'),

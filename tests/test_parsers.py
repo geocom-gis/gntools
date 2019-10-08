@@ -19,7 +19,7 @@ from collections import OrderedDict
 
 import pytest
 
-from gpf.tools.workspace import WorkspaceManager
+from gpf.paths import Workspace
 from gntools.parsers import *
 
 
@@ -55,7 +55,7 @@ def test_menuargparser_bad():
 def test_menuargparser_basic():
     sys.argv = [__file__, 'workspace', 'qualifier', '#', 1, 2]
     menu_params = MenuArgParser('Field0', 'Field1')
-    assert menu_params.workspace == WorkspaceManager('workspace', 'qualifier')
+    assert menu_params.workspace == Workspace('workspace', 'qualifier')
     assert repr(menu_params.arguments) == 'ScriptParameters(Field0=1, Field1=2)'
     assert menu_params.project_vars == {}
     assert menu_params._store == OrderedDict((
@@ -76,14 +76,14 @@ def test_menuargparser_all():
     sys.argv = [__file__, 'workspace', 'qualifier']
     menu_params = MenuArgParser()
     assert menu_params.script == __file__
-    assert menu_params.workspace == WorkspaceManager('workspace', 'qualifier')
+    assert menu_params.workspace == Workspace('workspace', 'qualifier')
     assert menu_params.arguments == (), 'arguments should be an empty tuple'
     assert menu_params.project_vars == {}, 'gv_vars should be an empty dictionary'
 
     sys.argv = [__file__, 'workspace', 'qualifier', '#', '#', '#', '#']
     menu_params = MenuArgParser()
     assert menu_params.script == __file__
-    assert menu_params.workspace == WorkspaceManager('workspace', 'qualifier')
+    assert menu_params.workspace == Workspace('workspace', 'qualifier')
     assert menu_params.arguments == (), 'arguments should be an empty tuple'
     assert menu_params.project_vars == {}, 'gv_vars should be an empty dictionary'
 
