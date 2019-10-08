@@ -257,7 +257,7 @@ class MenuArgParser(_BaseArgParser):
     and trailing NoData values are removed.
 
     Using the GEONIS menu definition (XML), a user can pass additional parameters to the script.
-    These parameters do not have a name, but the MenuArgParser can name them for you
+    These parameters do not have a name, but the ``MenuArgParser`` can name them for you
     if it is initialized with one or more parameter names, so you can access them as a
     ``namedtuple <https://docs.python.org/2/library/collections.html#collections.namedtuple>``_.
 
@@ -272,7 +272,7 @@ class MenuArgParser(_BaseArgParser):
         >>> # Note that you can still get the arguments by index or unpack as a tuple
         >>> params.arguments[1]
         'This is another argument'
-        >>> params.arguments == ('This value has been set in the GEONIS menu XML', 'This is another argument')
+        >>> params.arguments == 'This value has been set in the GEONIS menu XML', 'This is another argument'
         True
 
     If you don't specify any parameter names, the ``arguments`` property returns a regular ``tuple``.
@@ -304,7 +304,7 @@ class FormArgParser(_BaseArgParser):
     and trailing NoData values are removed.
 
     Using the GEONIS form definition (XML), a user can pass additional parameters to the script.
-    These parameters do not have a name, but the FormArgParser can name them for you
+    These parameters do not have a name, but the ``FormArgParser`` can name them for you
     if it is initialized with one or more parameter names, so you can access them as a
     ``namedtuple <https://docs.python.org/2/library/collections.html#collections.namedtuple>``_.
 
@@ -319,7 +319,7 @@ class FormArgParser(_BaseArgParser):
         >>> # Note that you can still get the arguments by index or unpack as a tuple
         >>> params.arguments[1]
         'This is another argument'
-        >>> params.arguments == ('This value has been set in the GEONIS form XML', 'This is another argument')
+        >>> params.arguments == 'This value has been set in the GEONIS form XML', 'This is another argument'
         True
 
     If you don't specify any parameter names, the ``arguments`` property returns a regular ``tuple``.
