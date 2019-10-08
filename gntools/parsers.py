@@ -259,7 +259,7 @@ class MenuArgParser(_BaseArgParser):
     Using the GEONIS menu definition (XML), a user can pass additional parameters to the script.
     These parameters do not have a name, but the ``MenuArgParser`` can name them for you
     if it is initialized with one or more parameter names, so you can access them as a
-    ``namedtuple <https://docs.python.org/2/library/collections.html#collections.namedtuple>``_.
+    `namedtuple <https://docs.python.org/2/library/collections.html#collections.namedtuple>`_.
 
     Example:
 
@@ -306,7 +306,7 @@ class FormArgParser(_BaseArgParser):
     Using the GEONIS form definition (XML), a user can pass additional parameters to the script.
     These parameters do not have a name, but the ``FormArgParser`` can name them for you
     if it is initialized with one or more parameter names, so you can access them as a
-    ``namedtuple <https://docs.python.org/2/library/collections.html#collections.namedtuple>``_.
+    `namedtuple <https://docs.python.org/2/library/collections.html#collections.namedtuple>`_.
 
     Example:
 
