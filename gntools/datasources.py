@@ -24,13 +24,21 @@ from xml.etree import cElementTree as _ETree
 import gpf.common.textutils as _tu
 import gpf.paths as _paths
 
+# GEONIS Datasource XML tags of interest
 _GN_XMLTAG_PARAM = 'param'
 _GN_XMLTAG_KEY = 'key'
 _GN_XMLTAG_VALUE = 'value'
 
+# GEONIS Datasource XML keys or element names of interest
 _GN_XMLKEY_PATH = 'path'
 _GN_XMLKEY_SDEF = 'sdefile'
 _GN_XMLKEY_QLFR = 'qualifier'
+_GN_XMLKEY_MEDM = 'medium'
+
+# Default GEONIS directory names
+_DIRNAME_DATASRC = 'datasources'
+_DIRNAME_PROJECT = 'projects'
+_DIRNAME_GNMEDIA = 'media'
 
 
 class Datasource(_paths.Workspace):
@@ -46,14 +54,26 @@ class Datasource(_paths.Workspace):
     :raises ValueError: If the GEONIS Datasource XML does not exist or failed to parse.
 
     .. note::           All class methods are inherited from :class:`gpf.paths.Workspace`.
-                        Only the initialization process of the *Datasource* is different.
-                        Generally speaking, users will find the :func:`find_path` and :func:`make_path` functions
-                        most useful.
+                        The initialization process of the *Datasource* class is different, because it will read the
+                        workspace path from the GEONIS Datasource XML.
+                        Another difference is that the *Datasource* class also stores the
+                        GEONIS :py:attr:`~medium` it applies to. Furthermore, it features 2 helper functions, which
+                        try to guess the paths of the media directory (:func:`~get_media_dir`)
+                        and the project directory (:func:`~get_project_dir`) for that same medium.
     """
 
     def __init__(self, xml_path):
-        db_dir, db_file, qualifier = self._read_params(xml_path)
-        super(Datasource, self).__init__(db_file, qualifier, db_dir)
+        # Use absolute path to read XML
+        xml_abs = _os.path.realpath(xml_path)
+        xml_root = self._parse_xml(xml_abs)
+
+        # Try to find GEONIS base path from XML path (often a mapped drive letter, e.g. 'Q:')
+        self._gnbase = _paths.find_parent(xml_abs, _DIRNAME_DATASRC)
+
+        # Extract DB parameters and GEONIS medium and initialize Workspace
+        db_path, qualifier, self._medium = self._get_props(xml_root)
+        db_root = _os.path.dirname(xml_abs) if not _os.path.isabs(db_path) else None
+        super(Datasource, self).__init__(db_path, qualifier, db_root)
 
     @staticmethod
     def _parse_xml(xml_path):
@@ -64,21 +84,49 @@ class Datasource(_paths.Workspace):
             raise ValueError('Failed to parse GEONIS Datasource XML {}: {}'.format(_tu.to_repr(xml_path), e))
         return tree.getroot()
 
-    def _read_params(self, xml_path):
-        """ Returns a tuple of (DB dir/root, DB path, DB qualifier) from a GEONIS Datasource XML. """
-        db_dir = _tu.EMPTY_STR
+    @staticmethod
+    def _get_props(xml_root):
+        """ Returns a tuple of (DB path, DB qualifier, medium) from a GEONIS Datasource XML root element. """
         db_path = _tu.EMPTY_STR
         qualifier = _tu.EMPTY_STR
 
-        xml_path = _os.path.realpath(xml_path)
-        xml_root = self._parse_xml(xml_path)
+        # Get DB parameters
         for param in xml_root.iter(_GN_XMLTAG_PARAM):
             key = param.attrib.get(_GN_XMLTAG_KEY)
             value = param.attrib.get(_GN_XMLTAG_VALUE, _tu.EMPTY_STR)
             if key in (_GN_XMLKEY_PATH, _GN_XMLKEY_SDEF):
                 db_path = _os.path.normpath(value)
-                if not _os.path.isabs(db_path):
-                    db_dir = _os.path.dirname(xml_path)
             elif key == _GN_XMLKEY_QLFR:
                 qualifier = value
-        return db_dir, db_path, qualifier
+
+        # Read GEONIS medium
+        medium = getattr(xml_root.find(_GN_XMLKEY_MEDM), 'text', None)
+
+        return db_path, qualifier, medium
+
+    @property
+    def medium(self):
+        """ Returns the name of the GEONIS medium to which the data source applies. """
+        return self._medium
+
+    def get_media_dir(self):
+        """
+        Gets the derived full path to the corresponding GEONIS media directory for the :py:attr:`~medium`.
+
+        :raises OSError:     When the derived directory path does not exist.
+        """
+        dir_path = _paths.concat(self._gnbase, _DIRNAME_GNMEDIA, self._medium)
+        if not _os.path.isdir(dir_path):
+            raise OSError('GEONIS media directory {!r} does not exist'.format(dir_path))
+        return dir_path
+
+    def get_project_dir(self):
+        """
+        Gets the derived full path to the corresponding GEONIS project directory for the :py:attr:`~medium`.
+
+        :raises OSError:     When the derived directory path does not exist.
+        """
+        dir_path = _paths.concat(self._gnbase, _DIRNAME_PROJECT, self._medium)
+        if not _os.path.isdir(dir_path):
+            raise OSError('GEONIS project directory {!r} does not exist'.format(dir_path))
+        return dir_path
