@@ -34,6 +34,13 @@ Please note that the ``gntools`` package has been developed for **Python 2.7.14+
 
 .. _GEONIS: https://geonis.com/en/solutions/framework/geonis
 
+Documentation
+-------------
+
+The complete ``gntools`` documentation can be found at `Read the Docs`_.
+
+.. _Read the Docs: https://gntools.readthedocs.io/
+
 Requirements
 ------------
 
@@ -55,13 +62,6 @@ When ``pip`` is installed, the user can simply run:
 Notice that ``pip`` will also install the ``gpf`` dependency, if it's missing.
 
 .. _pip: https://pip.pypa.io/en/stable/installing/
-
-Documentation
--------------
-
-The complete ``gntools`` documentation can be found at `Read the Docs`_.
-
-.. _Read the Docs: https://gntools.readthedocs.io/
 
 License
 -------
