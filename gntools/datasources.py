@@ -21,6 +21,7 @@ The *datasource* module simplifies working with GEONIS Datasource XML files.
 import os as _os
 from xml.etree import cElementTree as _ETree
 
+import gpf.common.const as _const
 import gpf.common.textutils as _tu
 import gpf.paths as _paths
 
@@ -28,6 +29,7 @@ import gpf.paths as _paths
 _GN_XMLTAG_PARAM = 'param'
 _GN_XMLTAG_KEY = 'key'
 _GN_XMLTAG_VALUE = 'value'
+_GN_XMLTAG_TXT = 'text'
 
 # GEONIS Datasource XML keys or element names of interest
 _GN_XMLKEY_PATH = 'path'
@@ -87,20 +89,20 @@ class Datasource(_paths.Workspace):
     @staticmethod
     def _get_props(xml_root):
         """ Returns a tuple of (DB path, DB qualifier, medium) from a GEONIS Datasource XML root element. """
-        db_path = _tu.EMPTY_STR
-        qualifier = _tu.EMPTY_STR
+        db_path = _const.CHAR_EMPTY
+        qualifier = _const.CHAR_EMPTY
 
         # Get DB parameters
         for param in xml_root.iter(_GN_XMLTAG_PARAM):
             key = param.attrib.get(_GN_XMLTAG_KEY)
-            value = param.attrib.get(_GN_XMLTAG_VALUE, _tu.EMPTY_STR)
+            value = param.attrib.get(_GN_XMLTAG_VALUE, _const.CHAR_EMPTY)
             if key in (_GN_XMLKEY_PATH, _GN_XMLKEY_SDEF):
                 db_path = _os.path.normpath(value)
             elif key == _GN_XMLKEY_QLFR:
                 qualifier = value
 
         # Read GEONIS medium
-        medium = getattr(xml_root.find(_GN_XMLKEY_MEDM), 'text', None)
+        medium = getattr(xml_root.find(_GN_XMLKEY_MEDM), _GN_XMLTAG_TXT, None)
 
         return db_path, qualifier, medium
 

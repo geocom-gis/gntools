@@ -25,11 +25,12 @@ from collections import OrderedDict as _ODict
 from collections import namedtuple as _ntuple
 from warnings import warn as _warn
 
+import gpf.common.const as _const
 import gpf.common.textutils as _tu
 import gpf.common.validate as _vld
 import gpf.paths as _paths
 
-EMPTY_ARG = _tu.HASH
+EMPTY_ARG = _const.CHAR_HASH
 
 
 class ParameterWarning(UserWarning):
@@ -51,7 +52,7 @@ class _ArgMap(object):
 
     __slots__ = ('name', 'default', 'func', 'required')
 
-    def __init__(self, name, func=None, default=_tu.EMPTY_STR, required=False):
+    def __init__(self, name, func=None, default=_const.CHAR_EMPTY, required=False):
         self.name = name
         self.default = default
         self.required = required
@@ -98,7 +99,7 @@ class _BaseArgParser(object):
             # Declare a new ScriptParameters named tuple type and override its str() behavior
             typename = self._get_typename(self._PARAM_CONST)
             self._paramtuple = _ntuple(typename, field_names=param_names)
-            self._paramtuple.__str__ = lambda x: repr(x).replace(typename, _tu.EMPTY_STR)
+            self._paramtuple.__str__ = lambda x: repr(x).replace(typename, _const.CHAR_EMPTY)
         else:
             # Use a regular tuple type if no parameter names have been set
             self._paramtuple = tuple
@@ -110,7 +111,7 @@ class _BaseArgParser(object):
     @staticmethod
     def _get_typename(value):
         """ Formats a text string like a class/type name (Pascal case), e.g. 'my type' becomes 'MyType'. """
-        return value.title().replace(_tu.SPACE, _tu.EMPTY_STR)
+        return value.title().replace(_const.CHAR_SPACE, _const.CHAR_EMPTY)
 
     def _save_params(self, values):
         """
@@ -164,7 +165,7 @@ class _BaseArgParser(object):
 
         :rtype:    str
         """
-        return self._store.get(self._SCRIPT_PATH, _tu.EMPTY_STR)
+        return self._store.get(self._SCRIPT_PATH, _const.CHAR_EMPTY)
 
     @property
     def workspace(self):
@@ -174,7 +175,7 @@ class _BaseArgParser(object):
 
         :rtype:    gpf.paths.Workspace
         """
-        qualifier = self._store.get(self._DB_QUALIFIER, _tu.EMPTY_STR)
+        qualifier = self._store.get(self._DB_QUALIFIER, _const.CHAR_EMPTY)
         ws_path = self._store.get(self._WORKSPACE_PATH)
         return _paths.Workspace(ws_path, qualifier)
 
@@ -209,8 +210,8 @@ class _BaseArgParser(object):
 
         # Filter out empty properties and format key-value pairs (1 per line)
         # Notice that ScriptParameters will have their type name removed, because its __str__ method has been overridden
-        return _tu.LF.join('{}: {}'.format(_tu.capitalize(k), v)
-                           for k, v in self._store.iteritems() if _vld.has_value(v))
+        return _const.CHAR_LF.join('{}: {}'.format(_tu.capitalize(k), v)
+                                   for k, v in self._store.iteritems() if _vld.has_value(v))
 
 
 class MenuArgParser(_BaseArgParser):
@@ -320,7 +321,7 @@ class FormArgParser(_BaseArgParser):
 
         :rtype: str
         """
-        return self._store.get(self._TABLE_NAME, _tu.EMPTY_STR)
+        return self._store.get(self._TABLE_NAME, _const.CHAR_EMPTY)
 
     @property
     def key_field(self):
@@ -329,7 +330,7 @@ class FormArgParser(_BaseArgParser):
 
         :rtype: str
         """
-        return self._store.get(self._KEY_FIELD, _tu.EMPTY_STR)
+        return self._store.get(self._KEY_FIELD, _const.CHAR_EMPTY)
 
     @property
     def field_value(self):

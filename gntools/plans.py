@@ -18,6 +18,7 @@
 Module that facilitates working with GEONIS Generalized Plans (*GP* or *"Planwelt"*).
 """
 
+import gpf.common.const as _const
 import gpf.common.textutils as _tu
 import gpf.common.validate as _vld
 import gpf.paths as _paths
@@ -80,14 +81,14 @@ class PlanHelper:
     """
 
     __ARG_PFX = 'user_prefix'
-    __PLAN_SEP = _tu.UNDERSCORE
+    __PLAN_SEP = _const.CHAR_UNDERSCORE
     __USER_PFX = 'U'
 
     def __init__(self, plan, workspace=None, **kwargs):
 
-        self._gpn = _tu.EMPTY_STR
-        self._num = _tu.EMPTY_STR
-        self._pfx = _tu.EMPTY_STR
+        self._gpn = _const.CHAR_EMPTY
+        self._num = _const.CHAR_EMPTY
+        self._pfx = _const.CHAR_EMPTY
         self._wsman = None
         self._pfx_fields = False
 
@@ -130,7 +131,7 @@ class PlanHelper:
     @_uppercase
     def _fds_name(self, fds_base):
         """ Returns the Generalized Plan name for a base feature dataset name. """
-        return _tu.EMPTY_STR.join((self._pfx, fds_base, self.__PLAN_SEP, self._gpn, self._num))
+        return _const.CHAR_EMPTY.join((self._pfx, fds_base, self.__PLAN_SEP, self._gpn, self._num))
 
     @_uppercase
     def _fc_name(self, fds_base, fc_base):
@@ -145,7 +146,7 @@ class PlanHelper:
         num_parts = len(fc_parts)
         if num_parts == 1 or fc_parts[0] == fds_base:
             # fc_base is a single word or it starts with fds_base
-            return fds_name, _tu.EMPTY_STR.join((fds_name, self.__PLAN_SEP, fc_parts[-1]))
+            return fds_name, _const.CHAR_EMPTY.join((fds_name, self.__PLAN_SEP, fc_parts[-1]))
 
         # replace first part with GP name prefix and concat all parts
         fc_parts[0] = self._fds_name(fc_parts[0])
@@ -181,12 +182,12 @@ class PlanHelper:
         :param field_base:  Case-insensitive base name of the field, e.g. *TRASSE_REF*.
         :rtype:             str, unicode
         """
-        return _tu.EMPTY_STR.join((self._pfx if self._pfx_fields else _tu.EMPTY_STR, field_base, self._num))
+        return _const.CHAR_EMPTY.join((self._pfx if self._pfx_fields else _const.CHAR_EMPTY, field_base, self._num))
 
     def __repr__(self):
         """ Returns a representation of the PlanHelper. """
-        return '{}({!r})'.format(PlanHelper.__name__, _tu.EMPTY_STR.join((self._gpn, self._num)))
+        return '{}({!r})'.format(PlanHelper.__name__, _const.CHAR_EMPTY.join((self._gpn, self._num)))
 
     def __str__(self):
         """ Returns the (formatted) Generalized Plan (Planwelt) name. """
-        return _tu.EMPTY_STR.join((self._pfx, self._gpn, self._num))
+        return _const.CHAR_EMPTY.join((self._pfx, self._gpn, self._num))

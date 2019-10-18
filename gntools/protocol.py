@@ -27,11 +27,11 @@ from time import mktime as _mktime
 # noinspection PyPep8Naming
 from xml.etree import cElementTree as _xml
 
+import gntools.common.geometry as _geometry
+import gpf.common.const as _const
 import gpf.common.guids as _guids
-import gpf.common.textutils as _tu
 import gpf.common.validate as _vld
 import gpf.paths as _paths
-import gntools.common.geometry as _geometry
 
 _GNLOG_ENCODING = 'iso-8859-1'
 
@@ -139,7 +139,7 @@ class Feature(object):
             workspace = _table_cache[table]
         except KeyError:
             workspace = _paths.Workspace.get_root(self._table)
-        return workspace, table.split(_tu.DOT)[-1]
+        return workspace, table.split(_const.CHAR_DOT)[-1]
 
     def _get_dataid_attrs(self):
         """ Returns a dictionary of attributes that can be used to populate the <dataid> XML element. """
@@ -218,7 +218,7 @@ class Logger(object):
             _ATTR_LASTMOD:  str(0),
             _ATTR_READONLY: str(False).lower()  # TODO??
         }
-        if msg not in (_tu.EMPTY_STR, None):
+        if msg not in (_const.CHAR_EMPTY, None):
             entry_attrs[_ATTR_MSG] = msg
         return entry_attrs
 
@@ -232,7 +232,7 @@ class Logger(object):
         prj_dir, prj_name = _os.path.split(project_path)
 
         # By adding an empty string, we ensure that a slash is added at the end of the path (= protocol spec)
-        return _os.path.join(_os.path.realpath(prj_dir.strip()), _tu.EMPTY_STR), prj_name
+        return _os.path.join(_os.path.realpath(prj_dir.strip()), _const.CHAR_EMPTY), prj_name
 
     def _new_root(self):
         """
@@ -292,11 +292,11 @@ class Logger(object):
         """ Indents the current root element and its children, wraps it into an ElementTree and writes an XML. """
 
         def indent(element, level=0, last_child=False):
-            spacing = _tu.LF + level * _tu.TAB
+            spacing = _const.CHAR_LF + level * _const.CHAR_TAB
             num_children = len(element)
             if num_children:
                 if _vld.has_value(element.text, True):
-                    element.text = spacing + _tu.TAB
+                    element.text = spacing + _const.CHAR_TAB
                 for i, child in enumerate(element, 1):
                     indent(child, level + 1, i == num_children)
             if _vld.has_value(element.tail, True):
@@ -353,7 +353,7 @@ class Logger(object):
 
     def blank(self):
         """ Logs a blank Entry to the GEONIS XML protocol (appears as a blank line in the protocol window). """
-        self._add_entry(_tu.EMPTY_STR, _GNLOG_TYPE_MESSAGE)
+        self._add_entry(_const.CHAR_EMPTY, _GNLOG_TYPE_MESSAGE)
 
     def header(self, message, gn_feature=None):
         """
