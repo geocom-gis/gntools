@@ -21,7 +21,7 @@ The *datasource* module simplifies working with GEONIS Datasource XML files.
 import os as _os
 from xml.etree import cElementTree as _ETree
 
-import gpf.common.const as _const
+import gntools.common.const as _const
 import gpf.common.textutils as _tu
 import gpf.paths as _paths
 

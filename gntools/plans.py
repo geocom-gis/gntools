@@ -18,7 +18,7 @@
 Module that facilitates working with GEONIS Generalized Plans (*GP* or *"Planwelt"*).
 """
 
-import gpf.common.const as _const
+import gntools.common.const as _const
 import gpf.common.textutils as _tu
 import gpf.common.validate as _vld
 import gpf.paths as _paths

@@ -25,7 +25,7 @@ from collections import OrderedDict as _ODict
 from collections import namedtuple as _ntuple
 from warnings import warn as _warn
 
-import gpf.common.const as _const
+import gntools.common.const as _const
 import gpf.common.textutils as _tu
 import gpf.common.validate as _vld
 import gpf.paths as _paths
