@@ -113,22 +113,22 @@ class Datasource(_paths.Workspace):
 
     def get_media_dir(self):
         """
-        Gets the derived full path to the corresponding GEONIS media directory for the :py:attr:`~medium`.
+        Gets the derived full path to the corresponding GEONIS media directory.
 
         :raises OSError:     When the derived directory path does not exist.
         """
-        dir_path = _paths.concat(self._gnbase, _DIRNAME_GNMEDIA, self._medium)
+        dir_path = _paths.concat(self._gnbase, _DIRNAME_GNMEDIA)
         if not _os.path.isdir(dir_path):
             raise OSError('GEONIS media directory {!r} does not exist'.format(dir_path))
         return dir_path
 
     def get_project_dir(self):
         """
-        Gets the derived full path to the corresponding GEONIS project directory for the :py:attr:`~medium`.
+        Gets the derived full path to the corresponding GEONIS project directory.
 
         :raises OSError:     When the derived directory path does not exist.
         """
-        dir_path = _paths.concat(self._gnbase, _DIRNAME_PROJECT, self._medium)
+        dir_path = _paths.concat(self._gnbase, _DIRNAME_PROJECT)
         if not _os.path.isdir(dir_path):
             raise OSError('GEONIS project directory {!r} does not exist'.format(dir_path))
         return dir_path
