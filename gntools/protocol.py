@@ -32,6 +32,7 @@ import gpf.common.const as _const
 import gpf.common.guids as _guids
 import gpf.common.validate as _vld
 import gpf.paths as _paths
+import gpf.tools.metadata as _meta
 
 _GNLOG_ENCODING = 'iso-8859-1'
 
@@ -41,9 +42,6 @@ _GNLOG_TYPE_MESSAGE = 2  # In Delphi code, this is called GNLogMsg
 _GNLOG_TYPE_WARNING = 3
 _GNLOG_TYPE_FAILURE = 4
 _GNLOG_TYPE_NOTICE = 5  # In Delphi code, this is called GnLogInfo
-
-_ESRI_FIELD_SHAPE = 'Shape'
-_ESRI_FIELD_GLOBALID = 'GlobalID'
 
 _ATTR_CONN = 'con'
 _ATTR_TABLE = 'tbl'
@@ -106,6 +104,18 @@ def _get_delphi_time(time=None):
     return delphi_time
 
 
+class _TableProps(object):
+    def __init__(self, table_path):
+        # Extract the workspace root (Geodatabase) path from the table path
+        self.workspace = str(_paths.get_workspace(table_path, True))
+
+        # Store the unqualified table name
+        self.table = _paths.unqualify(table_path)
+
+        # Store the GlobalID field name
+        self.globalid_field = _meta.Describe(table_path).globalIDFieldName or _const.FIELD_GLOBALID
+
+
 class Feature(object):
     """
     Feature(table, global_id, {geometry}, {globalid_field})
@@ -128,26 +138,29 @@ class Feature(object):
         self._table = table
         self._guid = _guids.Guid(global_id)
         self._shape = geometry
-        self._gidfld = kwargs.get('globalid_field', _ESRI_FIELD_GLOBALID)
+        self._gidfld = kwargs.get('globalid_field')
 
     def _get_workspace(self):
-        """ Extracts a tuple of (root workspace, unqualified table name) from *table_path*. """
+        """ Extracts a _TableProps object from *table_path* or reuses one created earlier. """
         global _table_cache
 
-        table = _os.path.basename(self._table)
+        table = _os.path.normpath(self._table).lower()
         try:
-            workspace = _table_cache[table]
+            # Get memoized table properties, if any
+            props = _table_cache[table]
         except KeyError:
-            workspace = _paths.Workspace.get_root(self._table)
-        return workspace, table.split(_const.CHAR_DOT)[-1]
+            # Create new _TableProps object and store it
+            props = _TableProps(self._table)
+            _table_cache[table] = props
+        return props
 
     def _get_dataid_attrs(self):
         """ Returns a dictionary of attributes that can be used to populate the <dataid> XML element. """
-        db_path, tb_name = self._get_workspace()
+        props = self._get_workspace()
         return {
-            _ATTR_CONN:  db_path,
-            _ATTR_TABLE: tb_name,
-            _ATTR_FIELD: self._gidfld,
+            _ATTR_CONN:  props.workspace,
+            _ATTR_TABLE: props.table,
+            _ATTR_FIELD: self._gidfld or props.globalid_field,
             _ATTR_VALUE: self.fid
         }
 
