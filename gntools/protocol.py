@@ -28,7 +28,7 @@ from time import mktime as _mktime
 from xml.etree import cElementTree as _xml
 
 import gntools.common.geometry as _geometry
-import gpf.common.const as _const
+import gntools.common.const as _const
 import gpf.common.guids as _guids
 import gpf.common.validate as _vld
 import gpf.paths as _paths
@@ -105,6 +105,12 @@ def _get_delphi_time(time=None):
 
 
 class _TableProps(object):
+    """
+    Dataholder class for table properties (workspace path, table name, GlobalID field).
+
+    :param table_path:  The full path to the table or feature class for which the TableProps should be populated.
+    :type table_path:   str, unicode
+    """
     def __init__(self, table_path):
         # Extract the workspace root (Geodatabase) path from the table path
         self.workspace = str(_paths.get_workspace(table_path, True))
@@ -141,7 +147,7 @@ class Feature(object):
         self._gidfld = kwargs.get('globalid_field')
 
     def _get_workspace(self):
-        """ Extracts a _TableProps object from *table_path* or reuses one created earlier. """
+        """ Extracts a _TableProps object from *table_path* or reuses a memoized one. """
         global _table_cache
 
         table = _os.path.normpath(self._table).lower()
@@ -228,8 +234,8 @@ class Logger(object):
         entry_attrs = {
             _ATTR_MSGTYPE:  str(msg_type),
             _ATTR_DATE:     _get_delphi_time(),
-            _ATTR_LASTMOD:  str(0),
-            _ATTR_READONLY: str(False).lower()  # TODO??
+            _ATTR_LASTMOD:  str(0),             # For a new Protocol, this will always be 0
+            _ATTR_READONLY: str(False).lower()  # Will this value ever be something else?
         }
         if msg not in (_const.CHAR_EMPTY, None):
             entry_attrs[_ATTR_MSG] = msg
