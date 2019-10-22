@@ -7,6 +7,7 @@ Submodules
 .. toctree::
 
    gntools.common.geometry
+   gntools.common.const
 
 Module contents
 ---------------

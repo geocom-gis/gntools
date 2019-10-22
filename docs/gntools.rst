@@ -14,6 +14,7 @@ Submodules
 .. toctree::
 
     gntools.datasources
+    gntools.definitions
     gntools.parsers
     gntools.plans
     gntools.protocol
