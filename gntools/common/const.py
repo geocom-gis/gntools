@@ -17,6 +17,29 @@
 """
 Module with specific GEONIS-related constants.
 All GPF constants are imported as well, which means that this module basically extends the gpf.common.const module.
+
+This module also contains GEONIS definition mappings (`GNTABLES` and `GNFIELDS`, for example).
+These mappings are stored as dictionary structures.
+Mapping structures determine which Python Definition property/attribute is mapped to what GEONIS definition
+(e.g. table or field name). When a language-based or custom override is available, the definition override is looked up
+in the definition table for a certain solution, which is stored in the database. If this table does not exist,
+or no override was found, the default (German) value is returned instead.
+
+A mapping should always have the following dictionary structure::
+
+    mapping_name = {
+      solution_name1: {
+          code_property_name1: (definition_table_property_name, default_definition_value),
+          code_property_name2: (..., ...),
+          ...
+      },
+      solution_name2: {
+          ...
+      }
+    }
+
+If no definition table property name (i.e. lookup key) is available, it should be set to ``None``.
+Default definition values should always have a value, so that any failed lookup immediately returns this value.
 """
 
 # noinspection PyUnresolvedReferences
@@ -44,6 +67,8 @@ GNMEDIA_GAS = 'gas'
 GNMEDIA_SEWER = 'sew'
 GNMEDIA_HEATING = 'fwa'
 GNMEDIA_CADASTRE = 'av'
+
+# GEONIS DEFINITION MAPPINGS
 
 #: GEONIS table name mappings (English - German) for each solution.
 #: Currently, the mappings are only available for the electric solution (ELE) and are not exhaustive.
