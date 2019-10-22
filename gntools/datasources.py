@@ -19,7 +19,7 @@ The *datasource* module simplifies working with GEONIS Datasource XML files.
 """
 
 import os as _os
-from xml.etree import cElementTree as _ETree
+from xml.etree import cElementTree as _Xml
 
 import gntools.common.const as _const
 import gpf.common.textutils as _tu
@@ -81,8 +81,8 @@ class Datasource(_paths.Workspace):
     def _parse_xml(xml_path):
         """ Parses the XML file and returns the root Element. """
         try:
-            tree = _ETree.parse(xml_path)
-        except (TypeError, OSError, _ETree.ParseError) as e:
+            tree = _Xml.parse(xml_path)
+        except (TypeError, OSError, _Xml.ParseError) as e:
             raise ValueError('Failed to parse GEONIS Datasource XML {}: {}'.format(_tu.to_repr(xml_path), e))
         return tree.getroot()
 

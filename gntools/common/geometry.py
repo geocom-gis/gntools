@@ -20,8 +20,7 @@ GEONIS-specific module to handle or parse Esri geometries.
 
 import json as _json
 import math as _math
-# noinspection PyPep8Naming
-from xml.etree import cElementTree as _xml
+from xml.etree import cElementTree as _Xml
 
 import gpf.common.validate as _vld
 from gpf import arcpy as _arcpy
@@ -257,7 +256,7 @@ def _serialize_point(x, y):
     """
     if not x or x == _JSON_NAN or not y or y == _JSON_NAN:
         raise GeometrySerializationError('Points should have valid numeric X and Y values')
-    return _xml.Element(_TAG_POINT, {_ATTR_ENUM: str(_ESRI_ENUM_POINT), _XML_X: str(x), _XML_Y: str(y)})
+    return _Xml.Element(_TAG_POINT, {_ATTR_ENUM: str(_ESRI_ENUM_POINT), _XML_X: str(x), _XML_Y: str(y)})
 
 
 def _serialize_line(p1, p2):
@@ -269,7 +268,7 @@ def _serialize_line(p1, p2):
     :return:    An XML 'Line' element
     """
     p1 = _fix_start(p1)
-    line_xml = _xml.Element(_TAG_LINE, {_ATTR_ENUM: str(_ESRI_ENUM_LINE)})
+    line_xml = _Xml.Element(_TAG_LINE, {_ATTR_ENUM: str(_ESRI_ENUM_LINE)})
     line_xml.append(_serialize_point(*p1[:2]))
     line_xml.append(_serialize_point(*p2[:2]))
     return line_xml
@@ -284,7 +283,7 @@ def _serialize_circular_arc(start_point, end_point, interior_point):
     :param interior_point:  Interior or midpoint [x, y, ...]
     :return:                An XML 'CircularArc' element
     """
-    curve_xml = _xml.Element(_TAG_CARC, {
+    curve_xml = _Xml.Element(_TAG_CARC, {
         _ATTR_ENUM: str(_ESRI_ENUM_CARC),
         _ATTR_CCW: _XML_FALSE if get_area([start_point, interior_point, end_point]) else _XML_TRUE,
         _ATTR_MINOR: _XML_TRUE if is_minor(start_point, interior_point, end_point) else _XML_FALSE
@@ -304,7 +303,7 @@ def _serialize_arc(start_point, *args):
     :return:                An XML 'EllipticArc' element
     """
     end_point, center_point, _, cw, rotation, _, ratio = args
-    curve_xml = _xml.Element(_TAG_EARC, {
+    curve_xml = _Xml.Element(_TAG_EARC, {
         _ATTR_ENUM: str(_ESRI_ENUM_EARC),
         _ATTR_ESTD: _XML_FALSE,
         _ATTR_CCW: _XML_FALSE if cw else _XML_TRUE,
@@ -328,7 +327,7 @@ def _serialize_bezier(start_point, end_point, control_p1, control_p2):
     :param control_p2:      Control point 2 [x, y]
     :return:                An XML 'BezierCurve' element
     """
-    curve_xml = _xml.Element(_TAG_BEZIER, {_ATTR_ENUM: str(_ESRI_ENUM_BEZIER)})
+    curve_xml = _Xml.Element(_TAG_BEZIER, {_ATTR_ENUM: str(_ESRI_ENUM_BEZIER)})
     curve_xml.append(_serialize_point(*start_point[:2]))
     curve_xml.append(_serialize_point(*control_p1[:2]))
     curve_xml.append(_serialize_point(*end_point[:2]))
@@ -363,7 +362,7 @@ def _serialize_ring(ring):
     :return:        An XML 'Ring' element.
     """
     is_ext = get_area(ring) > 0  # Esri defines "IsExterior" as "ring orientation is clockwise, area > 0"
-    ring_xml = _xml.Element(_TAG_RING,
+    ring_xml = _Xml.Element(_TAG_RING,
                             {_ATTR_ENUM: str(_ESRI_ENUM_RING), _ATTR_EXT: _XML_TRUE if is_ext else _XML_FALSE})
     _serialize_path(ring, ring_xml)
     return ring_xml
@@ -390,11 +389,11 @@ def _serialize_polyline(polyline):
     :param polyline:    An EsriJSON 'curvePaths' or 'paths' object value.
     :return:            An XML 'Polyline' element.
     """
-    polyline_xml = _xml.Element(_TAG_POLYLINE, {_ATTR_ENUM: str(_ESRI_ENUM_POLYLINE)})
+    polyline_xml = _Xml.Element(_TAG_POLYLINE, {_ATTR_ENUM: str(_ESRI_ENUM_POLYLINE)})
     is_multi = len(polyline) > 1  # Does the GEONIS Protocol really never write Paths for single part polylines?
     for path in polyline:
         _serialize_path(path,
-                        _xml.SubElement(polyline_xml, _TAG_PATH, {_ATTR_ENUM: str(_ESRI_ENUM_PATH)})
+                        _Xml.SubElement(polyline_xml, _TAG_PATH, {_ATTR_ENUM: str(_ESRI_ENUM_PATH)})
                         if is_multi else polyline_xml)
     return polyline_xml
 
@@ -406,7 +405,7 @@ def _serialize_polygon(polygons):
     :param polygons:    An EsriJSON 'curveRings' or 'rings' object value.
     :return:            An XML 'Polygon' element.
     """
-    polygon_xml = _xml.Element(_TAG_POLYGON, {_ATTR_ENUM: str(_ESRI_ENUM_POLYGON)})
+    polygon_xml = _Xml.Element(_TAG_POLYGON, {_ATTR_ENUM: str(_ESRI_ENUM_POLYGON)})
     for path in polygons:
         polygon_xml.append(_serialize_ring(path))
     return polygon_xml
@@ -423,7 +422,7 @@ def _serialize_geometry(esri_json):
 
     _vld.pass_if(isinstance(esri_json, dict), TypeError, 'EsriJSON object should be a dictionary')
 
-    xml_geom = _xml.Element(_TAG_GEOMETRY)
+    xml_geom = _Xml.Element(_TAG_GEOMETRY)
 
     if not esri_json:
         # EsriJSON is empty (this should not happen actually)

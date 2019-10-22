@@ -24,8 +24,7 @@ from calendar import timegm as _timegm
 from datetime import datetime as _dt
 from datetime import timedelta as _td
 from time import mktime as _mktime
-# noinspection PyPep8Naming
-from xml.etree import cElementTree as _xml
+from xml.etree import cElementTree as _Xml
 
 import gntools.common.geometry as _geometry
 import gntools.common.const as _const
@@ -193,8 +192,8 @@ class Feature(object):
 
         :param parent_element:  Element
         """
-        feature = _xml.SubElement(parent_element, _TAG_FEATURE)
-        _xml.SubElement(feature, _TAG_DATAID, self._get_dataid_attrs())
+        feature = _Xml.SubElement(parent_element, _TAG_FEATURE)
+        _Xml.SubElement(feature, _TAG_DATAID, self._get_dataid_attrs())
         self._add_geometry(parent_element)
 
 
@@ -257,7 +256,7 @@ class Logger(object):
         """
         (Re)sets the root element for the GEONIS XML Protocol file.
         """
-        self._root = _xml.Element(_TAG_ROOT)
+        self._root = _Xml.Element(_TAG_ROOT)
 
     def _set_project(self, project_path):
         """ Sets the root element attributes (project directory and name). """
@@ -279,7 +278,7 @@ class Logger(object):
         :param gn_feature:  An optional feature to log in the <Object> node.
         :param function:    An optional custom function to log in the <CustomFunctions> node. Not supported yet.
         """
-        entry = _xml.SubElement(self._root, _TAG_ENTRY, self._get_attrs(msg, msg_type))
+        entry = _Xml.SubElement(self._root, _TAG_ENTRY, self._get_attrs(msg, msg_type))
         self._add_object(entry, gn_feature)
         self._add_function(entry, function)
 
@@ -291,7 +290,7 @@ class Logger(object):
         :param parent:      The XML Element to which the SubElement should be added.
         :param gn_feature:  A feature to add to the <Object> node. May be ``None``.
         """
-        obj = _xml.SubElement(parent, _TAG_OBJECT)
+        obj = _Xml.SubElement(parent, _TAG_OBJECT)
         if not gn_feature:
             return
         gn_feature.write_elements(obj)
@@ -304,7 +303,7 @@ class Logger(object):
         :param parent:      The XML Element to which the SubElement should be added.
         :param function:    A function to add to the <CustomFunctions> node. Not supported yet.
         """
-        _xml.SubElement(parent, _TAG_CFUNC)
+        _Xml.SubElement(parent, _TAG_CFUNC)
         _vld.raise_if(function, NotImplementedError, 'Custom functions are not supported yet')
 
     def _write_tree(self, output_path, encoding=_GNLOG_ENCODING):
@@ -322,7 +321,7 @@ class Logger(object):
                 element.tail = spacing[:-1] if last_child else spacing
 
         indent(self._root)
-        tree = _xml.ElementTree(self._root)
+        tree = _Xml.ElementTree(self._root)
         tree.write(output_path, encoding=encoding, xml_declaration=True)
         del tree
 
