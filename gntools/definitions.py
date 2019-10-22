@@ -27,9 +27,17 @@ are defined in the :py:mod:`~gntools.common.const` module.
 """
 
 import abc as _abc
+from warnings import warn as _warn
 
-from gntools.common import const
+from gntools.common import const as _const
+from gpf import paths as _paths
+from gpf.common import validate as _vld
 from gpf.lookups import ValueLookup as _ValueLookup
+
+
+class DefinitionWarning(UserWarning):
+    """ This warning is shown when the definitions for a certain solution are not available (yet). """
+    pass
 
 
 class _Definition:
@@ -39,19 +47,16 @@ class _Definition:
     __slots__ = '_def', '_map'
 
     @_abc.abstractmethod
-    def __init__(self, definition):
-        self._map = {}
+    def __init__(self, definition, mapping):
         self._def = definition
+        self._map = mapping.get(self._def.solution, {})
 
     def __getattr__(self, item):
-        solution = self._map.get(self._def.solution)
-        if not solution:
-            # The mappings for the given solution are not available: they need to be defined in gntools.common.const
-            raise NotImplementedError("Mappings for the '{}' solution have not been defined".format(self._def.solution))
-        mapping = solution.get(item)
+        mapping = self._map.get(item)
         if not mapping:
-            # This should not happen often, since __dir__ already tells the user which attributes are available
+            # __dir__ already tells the user which attributes are available, but this might not always be clear
             raise AttributeError("{!r} object has no attribute '{}'".format(self.__class__.__name__, item))
+        # If the first value in the mapping is not found, return the second value (= default)
         return self._def.get(*mapping)
 
     def __dir__(self):
@@ -66,8 +71,7 @@ class TableNames(_Definition):
     :type definition:   DefinitionTable
     """
     def __init__(self, definition):
-        super(TableNames, self).__init__(definition)
-        self._map = const.GNTABLES
+        super(TableNames, self).__init__(definition, _const.GNTABLES)
 
 
 class FieldNames(_Definition):
@@ -78,8 +82,7 @@ class FieldNames(_Definition):
     :type definition:   DefinitionTable
     """
     def __init__(self, definition):
-        super(FieldNames, self).__init__(definition)
-        self._map = const.GNFIELDS
+        super(FieldNames, self).__init__(definition, _const.GNFIELDS)
 
 
 class DefinitionTable(_ValueLookup):
@@ -94,8 +97,20 @@ class DefinitionTable(_ValueLookup):
     """
 
     def __init__(self, workspace, solution):
-        table_path = str(workspace.make_path(const.GNTABLE_SOLUTION_DEF.format(solution)))
-        super(DefinitionTable, self).__init__(table_path, const.GNFIELD_NAME, const.GNFIELD_VALUE)
+
+        # Check if workspace is a Workspace instance
+        _vld.pass_if(isinstance(workspace, _paths.Workspace), ValueError,
+                     '{!r} requires a {} object'.format(DefinitionTable.__name__, _paths.Workspace.__name__))
+
+        # Construct definition table path for the given solution
+        table_path = str(workspace.make_path(_const.GNTABLE_SOLUTION_DEF.format(solution)))
+
+        try:
+            # Try and get a lookup for the solution
+            super(DefinitionTable, self).__init__(table_path, _const.GNFIELD_NAME, _const.GNFIELD_VALUE)
+        except RuntimeError:
+            _warn("Failed to read GEONIS definition table for the '{}' solution".format(solution.upper()),
+                  DefinitionWarning)
         self.solution = solution.lower()
 
     @property
