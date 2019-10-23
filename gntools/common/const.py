@@ -57,6 +57,11 @@ GNTABLE_SPLITMERGE = 'gn_splitmerge_def'
 # GEONIS system table fields
 GNFIELD_NAME = 'name'
 GNFIELD_VALUE = 'value_'
+GNFIELD_REL_TYPE = 'relate_type'
+GNFIELD_REL_TABLE_SRC = 'source_table'
+GNFIELD_REL_TABLE_DST = 'target_table'
+GNFIELD_REL_KEYFIELD_SRC = 'source_idfield'
+GNFIELD_REL_KEYFIELD_DST = 'target_reffield'
 
 # Default GEONIS media/solution (feature dataset) names
 GNMEDIA_STANDARD = 'std'

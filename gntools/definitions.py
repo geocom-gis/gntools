@@ -31,8 +31,9 @@ from warnings import warn as _warn
 
 from gntools.common import const as _const
 from gpf import paths as _paths
+from gpf.tools import queries as _queries
 from gpf.common import validate as _vld
-from gpf.lookups import ValueLookup as _ValueLookup
+from gpf import lookups as _lookups
 
 
 class DefinitionWarning(UserWarning):
@@ -85,7 +86,7 @@ class FieldNames(_Definition):
         super(FieldNames, self).__init__(definition, _const.GNFIELDS)
 
 
-class DefinitionTable(_ValueLookup):
+class DefinitionTable(_lookups.ValueLookup):
     """
     Class that exposes the definitions (named objects) within the GEONIS data model.
     Currently, only table and field names can be retrieved.
@@ -130,3 +131,39 @@ class DefinitionTable(_ValueLookup):
         :rtype:     FieldNames
         """
         return FieldNames(self)
+
+
+class RelationTable(_lookups.RowLookup):
+    """
+    Class that returns a relationship table for the GEONIS data model.
+
+    :param workspace:       The Workspace instance for the GEONIS database.
+    :param relation_type:   The name of the relationship type.
+    :param reverse:         If set to ``True``, the relation is mapped from target to source.
+                            The default is ``False``.
+    :type workspace:        gpf.paths.Workspace
+    :type relation_type:    str, unicode
+    :type reverse:          bool
+    """
+
+    def __init__(self, workspace, relation_type=None, reverse=False):
+
+        # Check if workspace is a Workspace instance and relation_type is set
+        _vld.pass_if(isinstance(workspace, _paths.Workspace), ValueError,
+                     '{!r} requires a {} object'.format(DefinitionTable.__name__, _paths.Workspace.__name__))
+
+        # Construct relation definition table path and where clause
+        table_path = str(workspace.make_path(_const.GNTABLE_RELATION_DEF))
+        type_filter = None
+        if relation_type:
+            type_filter = _queries.Where(_const.GNFIELD_REL_TYPE, '=', relation_type)
+        src_table = _const.GNFIELD_REL_TABLE_DST if reverse else _const.GNFIELD_REL_TABLE_SRC
+        dst_table = _const.GNFIELD_REL_TABLE_SRC if reverse else _const.GNFIELD_REL_TABLE_DST
+        fields = (dst_table, _const.GNFIELD_REL_KEYFIELD_SRC, _const.GNFIELD_REL_KEYFIELD_DST)
+
+        try:
+            # Try and get a lookup for the solution
+            super(RelationTable, self).__init__(table_path, src_table, fields, type_filter)
+        except RuntimeError:
+            _warn("Failed to read GEONIS relation table '{}'".format(table_path),
+                  DefinitionWarning)
