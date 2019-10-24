@@ -127,14 +127,25 @@ class Feature(object):
 
     Creates a Feature for GEONIS Protocol logging purposes.
 
-    :param table:               The full path to the table or feature class that contains the logged feature.
-    :param global_id:           GlobalID value of the logged feature.
-    :param geometry:            Esri `Geometry` instance or EsriJSON string.
-    :keyword globalid_field:    If the *GlobalID* field has a different name, specify it using this option.
-    :type table:                str, unicode
-    :type global_id:            str, unicode, gpf.tools.guids.Guid
-    :type geometry:             str, Geometry
-    :type globalid_field:       str, unicode
+    **Params:**
+
+    -   **table** (str, unicode):
+
+        The full path to the table or feature class that contains the logged feature.
+
+    -   **global_id** (str, unicode, gpf.tools.guids.Guid):
+
+        GlobalID value of the logged feature.
+
+    -   **geometry** (str, arcpy.Geometry):
+
+        Esri `Geometry` instance or EsriJSON string.
+
+    **Keyword params:**
+
+    -   **globalid_field** (str, unicode):
+
+        If the *GlobalID* field has a different name, specify it using this option.
     """
 
     __slots__ = ('_table', '_guid', '_shape', '_gidfld')

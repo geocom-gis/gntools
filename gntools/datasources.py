@@ -51,8 +51,12 @@ class Datasource(_paths.Workspace):
     for elements (tables, feature datasets etc.) in an Esri workspace.
     To GEONIS, an Esri Workspace means an SDE connection file or a local File/Personal Geodatabase.
 
-    :param xml_path:    The full GEONIS Datasource XML file path.
-    :type xml_path:     str, unicode
+    **Params:**
+
+    -   **xml_path** (str, unicode):
+
+        The full GEONIS Datasource XML file path.
+
     :raises ValueError: If the GEONIS Datasource XML does not exist or failed to parse.
 
     .. note::           All class methods are inherited from :class:`gpf.paths.Workspace`.

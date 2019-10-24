@@ -33,17 +33,25 @@ class PlanHelper:
     The generated names conform to the GEONIS conventions, i.e. if a plan name contains a number >= 1000, it is assumed
     that the plan is a custom user plan, which means that it will be prefixed with a *U_*.
 
-    :param plan:            GEONIS Generalized Plan (Planwelt) name.
-                            For user plans (where numeric part >= 1000), the *U_* prefix can be omitted
-                            if the field names should **not** have this prefix.
-    :param workspace:       An optional Esri workspace path (``str``) or a
-                            :class:`gpf.paths.Workspace` instance.
-                            When specified, the :func:`get_feature_class` and :func:`get_feature_dataset` functions
-                            will return full paths instead of just the names.
-    :keyword user_prefix:   The prefix for custom user plans (where numeric part >= 1000). Defaults to *U*.
-    :type plan:             str, unicode
-    :type workspace:        str, unicode, gpf.paths.Workspace
-    :type user_prefix:      str, unicode
+    **Params:**
+
+    -   **plan** (str, unicode):
+
+        GEONIS Generalized Plan (Planwelt) name.
+        For user plans (where numeric part >= 1000), the *U_* prefix can be omitted
+        if the field names should **not** have this prefix.
+
+    -   **workspace** (str, unicode, gpf.paths.Workspace):
+
+        An optional Esri workspace path (``str``) or a :class:`gpf.paths.Workspace` instance.
+        When specified, the :func:`get_feature_class` and :func:`get_feature_dataset` functions
+        will return full paths instead of just the names.
+        
+    **Keyword params:**
+    
+    -   **user_prefix** (str, unicode):
+
+        The prefix for custom user plans (where numeric part >= 1000). Defaults to *U*.
 
     If you initialize the ``PlanHelper`` with a workspace, full paths will be returned:
 
