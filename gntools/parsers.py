@@ -56,20 +56,12 @@ class _ArgMap(object):
         self.name = name
         self.default = default
         self.required = required
-        self.func = clean_arg
-        if callable(func):
-            f = func
-            req_args = self.func.func_code.co_argcount
-            num_args = req_args
-            if hasattr(func, 'im_func'):
-                # function is part of a class (has 'self' argument): reset f to im_func and increment num_args by 1
-                f = func.im_func
-                num_args += 1
-            if hasattr(f, 'func_code') and f.func_code.co_argcount == num_args:
-                # argument count matches the clean_arg() function: override self.func
-                self.func = func
-            else:
-                raise ValueError('Argument function requires {} input arguments'.format(req_args))
+        if _vld.signature_matches(func, clean_arg):
+            self.func = func
+        else:
+            if func:
+                raise ValueError('Function requires {} input arguments'.format(clean_arg.func_code.co_argcount))
+            self.func = clean_arg
 
 
 class _BaseArgParser(object):
@@ -244,6 +236,12 @@ class MenuArgParser(_BaseArgParser):
         True
 
     If you don't specify any parameter names, the ``arguments`` property returns a regular ``tuple``.
+
+    **Params:**
+
+    -   **param_names**:
+
+        Optional parameter names to set on the parsed menu arguments.
     """
 
     def __init__(self, *param_names):
@@ -291,6 +289,12 @@ class FormArgParser(_BaseArgParser):
         True
 
     If you don't specify any parameter names, the ``arguments`` property returns a regular ``tuple``.
+
+    **Params:**
+    
+    -   **param_names**:
+
+        Optional parameter names to set on the parsed form arguments.
     """
 
     _TABLE_NAME = 'dataset name'
