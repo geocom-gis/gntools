@@ -16,24 +16,32 @@
 
 """
 The definitions module provides access to object names within the GEONIS data model (e.g. tables, fields etc.).
-The data model uses German names originally, but a user can override these names using a definition table,
-which is also stored in the geodatabase as GN<solution>_DEFINITION (e.g. GNELE_DEFINITION).
+The data model uses German names by default, but a user can override these names using a definition table,
+which is stored in the geodatabase as GN<solution>_DEFINITION (e.g. GNELE_DEFINITION).
 
 The :class:`DefinitionTable` class reads all key-value pairs from the definition table in the database.
 If no match with a certain key has been found, the default German object name is returned.
 
 The default German names and the mappings to their English counterparts
-are defined in the :py:mod:`~gntools.common.const` module.
+are defined in the :py:mod:`gntools.common.const` module.
+
+The :class:`RelationTable` class reads the intertable-relationships from the GNREL_DEFINITION table in the geodatabase.
 """
 
 import abc as _abc
+from collections import namedtuple as _ntuple
 from warnings import warn as _warn
 
 from gntools.common import const as _const
-from gpf import paths as _paths
-from gpf.tools import queries as _queries
-from gpf.common import validate as _vld
 from gpf import lookups as _lookups
+from gpf import paths as _paths
+from gpf.common import validate as _vld
+from gpf.common import textutils as _tu
+from gpf.tools import queries as _queries
+
+
+# Namedtuple base class for storing relation definitions
+_Relation = _ntuple('Relation', 'target_table relate_table source_field target_field relate_source relate_target type')
 
 
 class DefinitionWarning(UserWarning):
@@ -68,8 +76,11 @@ class TableNames(_Definition):
     """
     Provides access to GEONIS table names for the given definition table.
 
-    :param definition:  A DefinitionTable instance.
-    :type definition:   DefinitionTable
+    **Params:**
+
+    -   **definition** (:class:`DefinitionTable`):
+
+        A DefinitionTable instance.
     """
     def __init__(self, definition):
         super(TableNames, self).__init__(definition, _const.GNTABLES)
@@ -79,8 +90,11 @@ class FieldNames(_Definition):
     """
     Provides access to GEONIS field names for the given definition table.
 
-    :param definition:  A DefinitionTable instance.
-    :type definition:   DefinitionTable
+    **Params:**
+
+    -   **definition** (:class:`DefinitionTable`):
+
+        A DefinitionTable instance.
     """
     def __init__(self, definition):
         super(FieldNames, self).__init__(definition, _const.GNFIELDS)
@@ -91,10 +105,15 @@ class DefinitionTable(_lookups.ValueLookup):
     Class that exposes the definitions (named objects) within the GEONIS data model.
     Currently, only table and field names can be retrieved.
 
-    :param workspace:   The Workspace instance for the GEONIS database.
-    :param solution:    The name of the solution (e.g. ELE, GAS etc.) for which to read the definitions.
-    :type workspace:    gpf.paths.Workspace
-    :type solution:     str, unicode
+    **Params:**
+
+    -   **workspace** (gpf.paths.Workspace):
+
+        The Workspace instance for the GEONIS database.
+
+    -   **solution** (str, unicode):
+
+        The name of the solution (e.g. ELE, GAS etc.) for which to read the definitions.
     """
 
     def __init__(self, workspace, solution):
@@ -133,37 +152,130 @@ class DefinitionTable(_lookups.ValueLookup):
         return FieldNames(self)
 
 
-class RelationTable(_lookups.RowLookup):
+class Relation(_Relation):
     """
-    Class that returns a relationship table for the GEONIS data model.
+    Simple dataholder (``namedtuple``) for a GEONIS table relation.
+    These type of objects are stored as values in a :class:`RelationTable` lookup dictionary.
+    The source table name for the relation is taken from the key in this dictionary.
 
-    :param workspace:       The Workspace instance for the GEONIS database.
-    :param relation_type:   The name of the relationship type.
-    :param reverse:         If set to ``True``, the relation is mapped from target to source.
-                            The default is ``False``.
-    :type workspace:        gpf.paths.Workspace
-    :type relation_type:    str, unicode
-    :type reverse:          bool
+    **Params**:
+
+    -   **target_table** (str, unicode):
+
+        The name of the target/destination table that stores the foreign key field.
+
+    -   **relate_table** (str, unicode):
+
+        The name of the relation table (if cardinality is n:m).
+
+    -   **source_field** (str, unicode):
+
+        The name of the primary key field in the source/origin table.
+
+    -   **target_field** (str, unicode):
+
+        The name of the foreign key field in the target/destination table.
+
+    -   **relate_source** (str, unicode):
+
+        The name of the source reference field in the relationship table.
+
+    -   **relate_target** (str, unicode):
+
+        The name of the target reference field in the relationship table.
+
+    -   **type** (str, unicode):
+
+        The name of the relationship type.
+    """
+    __slots__ = ()
+
+
+class RelationTable(_lookups.Lookup):
+    """
+    Class that returns the relationship table for the GEONIS data model as a lookup dictionary.
+
+    Each key in the dictionary either represents the name of the source table (default) or the target table,
+    depending on the value of the *reverse* argument.
+
+    For each key, a :class:`Relation` is returned with the:
+
+    -   target table (value of source table if *reverse* is ``True``)
+    -   relationship table (``None`` if not set)
+    -   source key field (target reference field if *reverse* is ``True``)
+    -   target reference field (source key field if *reverse* is ``True``)
+    -   relationship source reference field (``None`` if not set, target reference field if *reverse* is ``True``)
+    -   relationship target reference field (``None`` if not set, source reference field if *reverse* is ``True``)
+    -   relation type name
+
+    Note that the relationship table values will only be set if the cardinality of the relationship is *n:m*.
+
+    **Params:**
+
+    -   **workspace** (gpf.paths.Workspace):
+
+        The Workspace instance for the GEONIS database.
+
+    -   **relation_type** (str, unicode):
+
+        An optional name of the relationship type (on which to filter).
+        Note that the :py:mod:`gntools.common.const` module contains all the
+        relationship type names (constants starting with GNRELTYPE_*).
+
+    -   **reverse** (bool):
+
+        If set to ``True``, the relationship is mapped from target to source. The default is ``False``.
+
+    .. seealso::    :class:`Relation`
     """
 
-    def __init__(self, workspace, relation_type=None, reverse=False):
+    def __init__(self, workspace, relation_type, reverse=False):
 
-        # Check if workspace is a Workspace instance and relation_type is set
+        rel_types = (_const.GNRELTYPE_AGGREGRATE, _const.GNRELTYPE_COMPOSITE, _const.GNRELTYPE_DATALINK,
+                     _const.GNRELTYPE_ENTITY, _const.GNRELTYPE_LABEL, _const.GNRELTYPE_PLAN,
+                     _const.GNRELTYPE_RELATE, _const.GNRELTYPE_SHAPEGROUP)
+
+        # Check if workspace is a Workspace instance and that a valid relation_type has been set
         _vld.pass_if(isinstance(workspace, _paths.Workspace), ValueError,
                      '{!r} requires a {} object'.format(DefinitionTable.__name__, _paths.Workspace.__name__))
+        _vld.pass_if(relation_type in rel_types, ValueError,
+                     'relation_type must be one of {}'.format(_tu.format_iterable(rel_types, _const.TEXT_OR)))
 
         # Construct relation definition table path and where clause
         table_path = str(workspace.make_path(_const.GNTABLE_RELATION_DEF))
-        type_filter = None
-        if relation_type:
-            type_filter = _queries.Where(_const.GNFIELD_REL_TYPE, '=', relation_type)
-        src_table = _const.GNFIELD_REL_TABLE_DST if reverse else _const.GNFIELD_REL_TABLE_SRC
-        dst_table = _const.GNFIELD_REL_TABLE_SRC if reverse else _const.GNFIELD_REL_TABLE_DST
-        fields = (dst_table, _const.GNFIELD_REL_KEYFIELD_SRC, _const.GNFIELD_REL_KEYFIELD_DST)
+        type_filter = _queries.Where(_const.GNFIELD_REL_TYPE, '=', relation_type)
+
+        # Set required fields
+        src_table = _const.GNFIELD_REL_TABLE_SRC
+        dst_table = _const.GNFIELD_REL_TABLE_DST
+        src_field = _const.GNFIELD_REL_KEYFIELD_SRC
+        dst_field = _const.GNFIELD_REL_KEYFIELD_DST
+        src_rel = _const.GNFIELD_REL_RELFIELD_SRC
+        dst_rel = _const.GNFIELD_REL_RELFIELD_DST
+        if reverse:
+            src_table = _const.GNFIELD_REL_TABLE_DST
+            dst_table = _const.GNFIELD_REL_TABLE_SRC
+            src_field = _const.GNFIELD_REL_KEYFIELD_DST
+            dst_field = _const.GNFIELD_REL_KEYFIELD_SRC
+            src_rel = _const.GNFIELD_REL_RELFIELD_DST
+            dst_rel = _const.GNFIELD_REL_RELFIELD_SRC
+        fields = (dst_table, _const.GNFIELD_REL_TABLE_REL, src_field,
+                  dst_field, src_rel, dst_rel, _const.GNFIELD_REL_TYPE)
 
         try:
-            # Try and get a lookup for the solution
+            # Try and build a relationship lookup
             super(RelationTable, self).__init__(table_path, src_table, fields, type_filter)
         except RuntimeError:
             _warn("Failed to read GEONIS relation table '{}'".format(table_path),
                   DefinitionWarning)
+
+    def _process_row(self, row, **kwargs):
+        """ Stores each row in the relationship definition table as ``Relation`` objects. """
+        key, values = row[0], Relation(**row[1:])
+        if not key:
+            return
+        if key in self:
+            _warn("Source table '{}' participates in multiple {} relationships".format(key.upper(), values.type),
+                  DefinitionWarning)
+            return
+        self[key] = values
