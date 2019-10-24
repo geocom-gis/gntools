@@ -343,7 +343,7 @@ class Logger(object):
         :param message:     Text message to log.
         :param gn_feature:  Feature object to add to the log entry.
         :type message:      str, unicode
-        :type gn_feature:   ~gntools.protocol.Feature
+        :type gn_feature:   gntools.protocol.Feature
         """
         self._add_entry(message, _GNLOG_TYPE_MESSAGE, gn_feature)
 
@@ -354,7 +354,7 @@ class Logger(object):
         :param message:     Text message to log.
         :param gn_feature:  Feature object to add to the log entry.
         :type message:      str, unicode
-        :type gn_feature:   ~gntools.protocol.Feature
+        :type gn_feature:   gntools.protocol.Feature
         """
         self._add_entry(message, _GNLOG_TYPE_NOTICE, gn_feature)
 
@@ -365,7 +365,7 @@ class Logger(object):
         :param message:     Text message to log.
         :param gn_feature:  Feature object to add to the log entry.
         :type message:      str, unicode
-        :type gn_feature:   ~gntools.protocol.Feature
+        :type gn_feature:   gntools.protocol.Feature
         """
         self._add_entry(message, _GNLOG_TYPE_WARNING, gn_feature)
 
@@ -376,7 +376,7 @@ class Logger(object):
         :param message:     Text message to log.
         :param gn_feature:  Feature object to add to the log entry.
         :type message:      str, unicode
-        :type gn_feature:   ~gntools.protocol.Feature
+        :type gn_feature:   gntools.protocol.Feature
         """
         self._add_entry(message, _GNLOG_TYPE_FAILURE, gn_feature)
 
@@ -391,7 +391,7 @@ class Logger(object):
         :param message:     Text message to log.
         :param gn_feature:  Feature object to add to the log entry.
         :type message:      str, unicode
-        :type gn_feature:   ~gntools.protocol.Feature
+        :type gn_feature:   gntools.protocol.Feature
         """
         self._add_entry(message, _GNLOG_TYPE_HEADER1, gn_feature)
 
@@ -402,7 +402,7 @@ class Logger(object):
         :param message:     Text message to log.
         :param gn_feature:  Feature object to add to the log entry.
         :type message:      str, unicode
-        :type gn_feature:   ~gntools.protocol.Feature
+        :type gn_feature:   gntools.protocol.Feature
         """
         self._add_entry(message, _GNLOG_TYPE_HEADER2, gn_feature)
 

@@ -29,11 +29,11 @@ Several functions in this package require Esri's ``arcpy`` Python library, which
 However, users who have already installed and authorized ArcGIS Desktop (ArcMap, ArcCatalog etc.) should be able to work
 with this package without any problems.
 
-One of the most notable classes is the :class:`~gntools.protocol.Logger` class,
+One of the most notable classes is the :class:`gntools.protocol.Logger` class,
 which can be used to write messages and features to a GEONIS XML log file (or *Protocol*).
 Users can read this file back in with GEONIS and click on the listed features,
 which is useful for inspection and/or validation purposes.
 
-Also of interest might be the :py:mod:`~gntools.params` module. This module contains classes that
+Also of interest might be the :py:mod:`gntools.params` module. This module contains classes that
 help parse passed-in arguments from GEONIS menu or form scripts in a standardized and user-friendly manner.
 """

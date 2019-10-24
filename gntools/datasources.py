@@ -63,9 +63,9 @@ class Datasource(_paths.Workspace):
                         The initialization process of the *Datasource* class is different, because it will read the
                         workspace path from the GEONIS Datasource XML.
                         Another difference is that the *Datasource* class also stores the
-                        GEONIS :py:attr:`~medium` it applies to. Furthermore, it features 2 helper functions, which
-                        try to guess the paths of the media directory (:func:`~get_media_dir`)
-                        and the project directory (:func:`~get_project_dir`) for that same medium.
+                        GEONIS :py:attr:`medium` it applies to. Furthermore, it features 2 helper functions, which
+                        try to guess the paths of the media directory (:func:`get_media_dir`)
+                        and the project directory (:func:`get_project_dir`) for that same medium.
     """
 
     def __init__(self, xml_path):

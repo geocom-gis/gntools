@@ -452,7 +452,7 @@ def serialize(geometry):
     :return:            An XML 'Geometry' element.
     :rtype:             Element
 
-    .. seealso::        :class:`~gntools.protocol.Logger`, :class:`~gntools.protocol.Feature`
+    .. seealso::        :class:`gntools.protocol.Logger`, :class:`gntools.protocol.Feature`
     """
 
     try:
