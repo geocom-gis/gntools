@@ -68,9 +68,6 @@ class _Definition:
         # If the first value in the mapping is not found, return the second value (= default)
         return self._def.get(*mapping)
 
-    def __dir__(self):
-        return self._map.keys()
-
 
 class TableNames(_Definition):
     """
@@ -85,6 +82,9 @@ class TableNames(_Definition):
     def __init__(self, definition):
         super(TableNames, self).__init__(definition, _const.GNTABLES)
 
+    def __dir__(self):
+        return _const.GNTABLES.get(self._def.solution, {}).keys()
+
 
 class FieldNames(_Definition):
     """
@@ -98,6 +98,9 @@ class FieldNames(_Definition):
     """
     def __init__(self, definition):
         super(FieldNames, self).__init__(definition, _const.GNFIELDS)
+
+    def __dir__(self):
+        return _const.GNFIELDS.get(self._def.solution, {}).keys()
 
 
 class DefinitionTable(_lookups.ValueLookup):
