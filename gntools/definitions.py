@@ -271,7 +271,8 @@ class RelationTable(_lookups.Lookup):
 
     def _process_row(self, row, **kwargs):
         """ Stores each row in the relationship definition table as ``Relation`` objects. """
-        key, values = row[0], Relation(**row[1:])
+        formatted = [(v.upper() if isinstance(v, basestring) else v) for v in row[1:]]
+        key, values = formatted[0], Relation(*formatted[1:])
         if not key:
             return
         if key in self:
