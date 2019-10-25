@@ -68,6 +68,9 @@ class _Definition:
         # If the first value in the mapping is not found, return the second value (= default)
         return self._def.get(*mapping)
 
+    def __dir__(self):
+        return self._map.get(self._def.solution, {}).keys()
+
 
 class TableNames(_Definition):
     """
@@ -82,9 +85,6 @@ class TableNames(_Definition):
     def __init__(self, definition):
         super(TableNames, self).__init__(definition, _const.GNTABLES)
 
-    def __dir__(self):
-        return _const.GNTABLES.get(self._def.solution, {}).keys()
-
 
 class FieldNames(_Definition):
     """
@@ -98,9 +98,6 @@ class FieldNames(_Definition):
     """
     def __init__(self, definition):
         super(FieldNames, self).__init__(definition, _const.GNFIELDS)
-
-    def __dir__(self):
-        return _const.GNFIELDS.get(self._def.solution, {}).keys()
 
 
 class DefinitionTable(_lookups.ValueLookup):
@@ -274,7 +271,7 @@ class RelationTable(_lookups.Lookup):
 
     def _process_row(self, row, **kwargs):
         """ Stores each row in the relationship definition table as ``Relation`` objects. """
-        formatted = [(v.upper() if isinstance(v, basestring) else v) for v in row[1:]]
+        formatted = [(v.upper().strip() if isinstance(v, basestring) else v) for v in row]
         key, values = formatted[0], Relation(*formatted[1:])
         if not key:
             return
