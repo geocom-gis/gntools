@@ -62,8 +62,6 @@ class PlanHelper:
         'C:\\temp\\test.gdb\\SEW_PW3\\SEW_PW3_HALTUNG'
         >>> gph.get_feature_class('sew', 'awk_haltung')  # note: you can include a prefix override!
         'C:\\temp\\test.gdb\\SEW_PW3\\AWK_PW3_HALTUNG'
-        >>> gph.get_field_name('MyField')
-        'MYFIELD3'
 
     The following example shows how to use a ``PlanHelper`` for custom user plans (names only):
 
@@ -72,20 +70,6 @@ class PlanHelper:
         'U_ELE_GP1000'
         >>> gph.get_feature_class('ele', 'cable')
         'U_ELE_GP1000_CABLE'
-
-    For custom plan field names, adding the *U_* prefix upon initialization will add it to the field name only:
-
-        >>> gph = PlanHelper('pw1001')      # Initialize a PlanHelper for a custom plan without the U_ prefix
-        >>> gph.get_feature_dataset('was')  # Custom plans will always have a U_ prefix for feature datasets and classes
-        'U_ELE_PW1001'
-        >>> gph.get_field_name('MyField')   # But by default, the U_ prefix will **not** be added to field names
-        'MYFIELD1000'
-        >>> gph = PlanHelper('u_pw1002')    # Now we deliberately add the U_ prefix
-        >>> gph.get_feature_dataset('was')  # This does not affect feature dataset and feature class names
-        'U_ELE_PW1002'
-        >>> gph.get_field_name('MyField')   # But it does affect the field name
-        'U_MYFIELD1000'
-
     """
 
     __ARG_PFX = 'user_prefix'
@@ -94,14 +78,13 @@ class PlanHelper:
 
     def __init__(self, plan, workspace=None, **kwargs):
 
-        self._gpn = _const.CHAR_EMPTY
-        self._num = _const.CHAR_EMPTY
-        self._pfx = _const.CHAR_EMPTY
-        self._wsman = None
-        self._pfx_fields = False
+        self._gpn = _const.CHAR_EMPTY   # GP abbreviation (e.g. "GP", "PW" etc.)
+        self._num = _const.CHAR_EMPTY   # GP number (e.g. 1, 2, 3, 1001 etc.)
+        self._pfx = _const.CHAR_EMPTY   # User prefix with underscore (e.g. "U_")
+        self._workspace = None          # Reference to the Workspace
 
         if workspace:
-            self._wsman = workspace if isinstance(workspace, _paths.Workspace) else _paths.Workspace(workspace)
+            self._workspace = workspace if isinstance(workspace, _paths.Workspace) else _paths.Workspace(workspace)
 
         self._parse(plan, kwargs.get(self.__ARG_PFX, self.__USER_PFX).upper())
 
@@ -112,7 +95,6 @@ class PlanHelper:
 
         parts = plan.upper().split(self.__PLAN_SEP)
 
-        self._pfx_fields = user_prefix == parts[0]
         self._gpn = _tu.get_alphachars(parts[-1])
         self._num = _tu.get_digits(parts[-1])
 
@@ -134,7 +116,7 @@ class PlanHelper:
         return func_wrapper
 
     def _make_path(self, *parts):
-        return self._wsman.make_path(*parts)
+        return self._workspace.make_path(*parts)
 
     @_uppercase
     def _fds_name(self, fds_base):
@@ -168,7 +150,7 @@ class PlanHelper:
         :rtype:             str, unicode
         """
         fds_name = self._fds_name(fds_base)
-        return fds_name if not self._wsman else self._make_path(fds_name)
+        return fds_name if not self._workspace else self._make_path(fds_name)
 
     def get_feature_class(self, fds_base, fc_base):
         """
@@ -180,17 +162,34 @@ class PlanHelper:
         :rtype:             str, unicode
         """
         fds_name, fc_name = self._fc_name(fds_base, fc_base)
-        return fc_name if not self._wsman else self._make_path(fds_name, fc_name)
+        return fc_name if not self._workspace else self._make_path(fds_name, fc_name)
 
-    @_uppercase
-    def get_field_name(self, field_base):
+    @property
+    def abbreviation(self):
         """
-        Returns a field name for the current *Generalized Plan/Planwelt*.
+        Returns the Generalized Plan abbreviation (e.g. "GP" or "PW").
 
-        :param field_base:  Case-insensitive base name of the field, e.g. *TRASSE_REF*.
-        :rtype:             str, unicode
+        :rtype: str
         """
-        return _const.CHAR_EMPTY.join((self._pfx if self._pfx_fields else _const.CHAR_EMPTY, field_base, self._num))
+        return self._gpn
+
+    @property
+    def number(self):
+        """
+        Returns the Generalized Plan number as a string (e.g. "1", "2", "1001" etc.).
+
+        :rtype: str
+        """
+        return self._num
+
+    @property
+    def prefix(self):
+        """
+        Returns the Generalized Plan user prefix including the separator (underscore), e.g. "U_".
+
+        :rtype: str
+        """
+        return self._pfx
 
     def __repr__(self):
         """ Returns a representation of the PlanHelper. """
