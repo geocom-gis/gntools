@@ -172,7 +172,7 @@ class DefinitionTable(_lookups.ValueLookup):
 
 class Relation(_Relation):
     """
-    Simple dataholder (``namedtuple``) for a GEONIS table relation.
+    Simple dataholder (``namedtuple`` wrapper) for a GEONIS table relation.
     These type of objects are stored as values in a :class:`RelationTable` lookup dictionary.
     The source table name for the relation is taken from the key in this dictionary.
 
