@@ -191,6 +191,15 @@ class PlanHelper:
         """
         return self._pfx
 
+    @property
+    def workspace(self):
+        """
+        Returns the Workspace instance for this PlanHelper (specified on initialization).
+
+        :rtyoe: gpf.paths.Workspace
+        """
+        return self._workspace
+
     def __repr__(self):
         """ Returns a representation of the PlanHelper. """
         return '{}({!r})'.format(PlanHelper.__name__, _const.CHAR_EMPTY.join((self._gpn, self._num)))
