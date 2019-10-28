@@ -22,13 +22,11 @@ which is stored in the geodatabase as GN<solution>_DEFINITION (e.g. GNELE_DEFINI
 The :class:`DefinitionTable` class reads all key-value pairs from the definition table in the database.
 If no match with a certain key has been found, the default German object name is returned.
 
-The default German names and the mappings to their English counterparts
-are defined in the :py:mod:`gntools.common.const` module.
+The default German names and the mappings to their English counterparts are defined in the classes in this module.
 
-The :class:`RelationTable` class reads the intertable-relationships from the GNREL_DEFINITION table in the geodatabase.
+The :class:`RelationTable` class reads the inter-table-relationships from the GNREL_DEFINITION table in the geodatabase.
 """
 
-import abc as _abc
 from collections import namedtuple as _ntuple
 from warnings import warn as _warn
 
@@ -39,7 +37,6 @@ from gpf.common import validate as _vld
 from gpf.common import textutils as _tu
 from gpf.tools import queries as _queries
 
-
 # Namedtuple base class for storing relation definitions
 _Relation = _ntuple('Relation', 'target_table relate_table source_field target_field relate_source relate_target type')
 
@@ -49,32 +46,17 @@ class DefinitionWarning(UserWarning):
     pass
 
 
-class _Definition:
-    """ Abstract base class for all definition mappings. """
+class _Definition(object):
+    """ Base class for all definition mappings. """
+    __slots__ = '_def'
 
-    __metaclass__ = _abc.ABCMeta
-    __slots__ = '_def', '_map'
-
-    @_abc.abstractmethod
-    def __init__(self, definition, mapping):
+    def __init__(self, definition):
         self._def = definition
-        self._map = mapping.get(self._def.solution, {})
-
-    def __getattr__(self, item):
-        mapping = self._map.get(item)
-        if not mapping:
-            # __dir__ already tells the user which attributes are available, but this might not always be clear
-            raise AttributeError("{!r} object has no attribute '{}'".format(self.__class__.__name__, item))
-        # If the first value in the mapping is not found, return the second value (= default)
-        return self._def.get(*mapping)
-
-    def __dir__(self):
-        return self._map.get(self._def.solution, {}).keys()
 
 
-class TableNames(_Definition):
+class EleTableNames(_Definition):
     """
-    Provides access to GEONIS table names for the given definition table.
+    Provides access to GEONIS ELE table names for the given definition table (electric solution).
 
     **Params:**
 
@@ -82,13 +64,28 @@ class TableNames(_Definition):
 
         A DefinitionTable instance.
     """
-    def __init__(self, definition):
-        super(TableNames, self).__init__(definition, _const.GNTABLES)
+    strand = property(lambda self: self._def.get('tablename_branch', 'ele_strang'))
+    cable = property(lambda self: self._def.get('tablename_cable', 'ele_kabel')),
+    cable_connection = property(lambda self: self._def.get('tablename_ds_cableconnector', 'ele_ds_kabelverbindung')),
+    clamp = property(lambda self: self._def.get('tablename_clamp', 'ele_ds_klemme')),
+    connector = property(lambda self: self._def.get('tablename_ds_connector', 'ele_ds_verbinder')),
+    house = property(lambda self: self._def.get('tablename_house_conn', 'ele_hausanschluss')),
+    lighting = property(lambda self: self._def.get('tablename_luminary', 'ele_leuchte')),
+    pipe = property(lambda self: self._def.get('tablename_pipe', 'ele_rohr')),
+    rel_cable_route = property(lambda self: self._def.get('tablename_route_cable', 'eler_trasse_kabel')),
+    rel_pipe_cable = property(lambda self: self._def.get('tablename_pipe_cable', 'eler_rohr_kabel')),
+    rel_pipe_pipe = property(lambda self: self._def.get('tablename_pipe_pipe', 'eler_rohr_rohr')),
+    rel_route_rohr = property(lambda self: self._def.get('tablename_route_pipe', 'eler_route_pipe')),
+    route = property(lambda self: self._def.get('tablename_route', 'ele_trasse')),
+    socket = property(lambda self: self._def.get('tablename_sleeve_socket', 'ele_muffe')),
+    station = property(lambda self: self._def.get('tablename_ds_station', 'ele_ds_station')),
+    transformer = property(lambda self: self._def.get('tablename_ds_transformer', 'ele_ds_transformer')),
+    transition = property(lambda self: self._def.get('tablename_ds_inout', 'ele_ds_uebergang')),
 
 
-class FieldNames(_Definition):
+class EleFieldNames(_Definition):
     """
-    Provides access to GEONIS field names for the given definition table.
+    Provides access to GEONIS ELE field names for the given definition table (electric solution).
 
     **Params:**
 
@@ -96,14 +93,33 @@ class FieldNames(_Definition):
 
         A DefinitionTable instance.
     """
-    def __init__(self, definition):
-        super(FieldNames, self).__init__(definition, _const.GNFIELDS)
+    cable_ref = property(lambda self: self._def.get('fieldname_cable_ref', 'kabel_ref')),
+    code = property(lambda self: self._def.get('fieldname_code_ref', 'code')),
+    dd_ref = property(lambda self: self._def.get('fieldname_ds_ref', 'ds_ref')),
+    ddhv_ref = property(lambda self: self._def.get('fieldname_dshs_ref', 'dshs_ref')),
+    ddlv_ref = property(lambda self: self._def.get('fieldname_dsns_ref', 'dsns_ref')),
+    ddmv_ref = property(lambda self: self._def.get('fieldname_dsms_ref', 'dsms_ref')),
+    ddpl_ref = property(lambda self: self._def.get('fieldname_dsob_ref', 'dsob_ref')),
+    index = property(lambda self: self._def.get('fieldname_idx', 'idx')),
+    item_number = property(lambda self: self._def.get('fieldname_clamp_number', 'nummer')),
+    length = property(lambda self: self._def.get('fieldname_length', 'laenge')),
+    name_number = property(lambda self: self._def.get('fieldname_ds_trafo_name_number', 'name_nummer')),
+    pipe_ref = property(lambda self: self._def.get('fieldname_pipe_ref', 'rohr_ref')),
+    position = property(lambda self: self._def.get('fieldname_posnum', 'posnum')),
+    route_index = property(lambda self: self._def.get('fieldname_trench_idx', 'trasse_idx')),
+    route_pos = property(lambda self: self._def.get('fieldname_trench_pos', 'trasse_pos')),
+    route_ref = property(lambda self: self._def.get('fieldname_route_ref', 'trasse_ref')),
+    station_ref = property(lambda self: self._def.get('fieldname_station_ref', 'station_ref')),
+    strand_ref = property(lambda self: self._def.get('fieldname_strang_ref', 'strang_ref')),
+    transformer_ref = property(lambda self: self._def.get('fieldname_trafo_ref', 'trafo_ref')),
+    type = property(lambda self: self._def.get('fieldname_trasse_typ', 'typ')),
+    voltage = property(lambda self: self._def.get('fieldname_dense', 'spannung'))
 
 
 class DefinitionTable(_lookups.ValueLookup):
     """
     Class that exposes the definitions (named objects) within the GEONIS data model.
-    Currently, only table and field names can be retrieved.
+    Currently, only table and field names for the ELE (electric) solution can be retrieved.
 
     **Params:**
 
@@ -135,21 +151,23 @@ class DefinitionTable(_lookups.ValueLookup):
 
     @property
     def tablenames(self):
-        """
-        Provides access to GEONIS table names for the given solution.
+        """ Provides access to GEONIS table names for the given solution. """
+        if self:
+            if self.solution == _const.GNMEDIA_ELECTRIC:
+                return EleTableNames(self)
+            # elif ... TODO: Add classes for other solutions
 
-        :rtype:     TableNames
-        """
-        return TableNames(self)
+        raise ValueError('There are no table definitions for the {} solution'.format(self.solution.upper()))
 
     @property
     def fieldnames(self):
-        """
-        Provides access to GEONIS field names for the given solution.
+        """ Provides access to GEONIS field names for the given solution. """
+        if self:
+            if self.solution == _const.GNMEDIA_ELECTRIC:
+                return EleFieldNames(self)
+            # elif ... TODO: Add classes for other solutions
 
-        :rtype:     FieldNames
-        """
-        return FieldNames(self)
+        raise ValueError('There are no field definitions for the {} solution'.format(self.solution.upper()))
 
 
 class Relation(_Relation):
