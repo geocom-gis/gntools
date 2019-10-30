@@ -190,6 +190,10 @@ class Relation(tuple):
             except IndexError:
                 yield None
 
+    def __nonzero__(self):
+        # If all values in the tuple are None, return False.
+        return any(self)
+
     #: The name of the target/destination table that stores the foreign key field.
     target_table = property(lambda self: self[0])
 
