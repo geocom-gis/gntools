@@ -43,7 +43,7 @@ setup(
             'Geocom', 'GIS', 'GEONIS', 'tools', 'scripting', 'framework', 'spatial',
             'geospatial', 'geoprocessing', 'Esri', 'ArcGIS', 'ArcPy', 'VertiGIS'
         ],
-        install_requires=['gpf >= 0.8.2'],
+        install_requires=['gpf >= 0.8.4'],
         python_requires='>=2.7.14, <3',
         tests_require=tests_require,
         extras_require={
