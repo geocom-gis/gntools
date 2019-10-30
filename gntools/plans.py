@@ -185,7 +185,7 @@ class PlanHelper:
     @property
     def prefix(self):
         """
-        Returns the Generalized Plan user prefix including the separator (underscore), e.g. "U_".
+        Returns the Generalized Plan user prefix including the separator (underscore), e.g. ``U_``.
 
         :rtype: str
         """
