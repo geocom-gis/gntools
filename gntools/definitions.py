@@ -27,7 +27,6 @@ The default German names and the mappings to their English counterparts are defi
 The :class:`RelationTable` class reads the inter-table-relationships from the GNREL_DEFINITION table in the geodatabase.
 """
 
-from collections import namedtuple as _ntuple
 from warnings import warn as _warn
 
 from gntools.common import const as _const
@@ -36,9 +35,6 @@ from gpf import paths as _paths
 from gpf.common import validate as _vld
 from gpf.common import textutils as _tu
 from gpf.tools import queries as _queries
-
-# Namedtuple base class for storing relation definitions
-_Relation = _ntuple('Relation', 'target_table relate_table source_field target_field relate_source relate_target type')
 
 
 class DefinitionWarning(UserWarning):
@@ -170,43 +166,50 @@ class DefinitionTable(_lookups.ValueLookup):
         raise ValueError('There are no field definitions for the {} solution'.format(self.solution.upper()))
 
 
-class Relation(_Relation):
+class Relation(tuple):
     """
-    Simple dataholder (``namedtuple`` wrapper) for a GEONIS table relation.
+    Simple dataholder (similar to a ``namedtuple``) for a GEONIS table relation.
     These type of objects are stored as values in a :class:`RelationTable` lookup dictionary.
     The source table name for the relation is taken from the key in this dictionary.
 
-    **Params**:
-
-    -   **target_table** (str, unicode):
-
-        The name of the target/destination table that stores the foreign key field.
-
-    -   **relate_table** (str, unicode):
-
-        The name of the relation table (if cardinality is n:m).
-
-    -   **source_field** (str, unicode):
-
-        The name of the primary key field in the source/origin table.
-
-    -   **target_field** (str, unicode):
-
-        The name of the foreign key field in the target/destination table.
-
-    -   **relate_source** (str, unicode):
-
-        The name of the source reference field in the relationship table.
-
-    -   **relate_target** (str, unicode):
-
-        The name of the target reference field in the relationship table.
-
-    -   **type** (str, unicode):
-
-        The name of the relationship type.
+    The initialization argument names are equal to the listed property names below.
     """
     __slots__ = ()
+
+    def __new__(cls, target_table=None, relate_table=None, source_field=None, target_field=None,
+                relate_source=None, relate_target=None, relate_type=None):
+        args = cls._fix_args(target_table, relate_table, source_field, target_field,
+                             relate_source, relate_target, relate_type)
+        return tuple.__new__(Relation, args)
+
+    @classmethod
+    def _fix_args(cls, *args):
+        for i in xrange(cls.__new__.func_code.co_argcount - 1):
+            try:
+                yield args[i]
+            except IndexError:
+                yield None
+
+    #: The name of the target/destination table that stores the foreign key field.
+    target_table = property(lambda self: self[0])
+
+    #: The name of the relation table (if cardinality is n:m).
+    relate_table = property(lambda self: self[1])
+
+    #: The name of the primary key field in the source/origin table.
+    source_field = property(lambda self: self[2])
+
+    #: The name of the foreign key field in the target/destination table.
+    target_field = property(lambda self: self[3])
+
+    #: The name of the source reference field in the relationship table (if cardinality is n:m).
+    relate_source = property(lambda self: self[4])
+
+    #: The name of the target reference field in the relationship table (if cardinality is n:m).
+    relate_target = property(lambda self: self[5])
+
+    #: The relationship type or cardinality (e.g. "1:n", "1:1", "n:m", "1:0").
+    relate_type = property(lambda self: self[6])
 
 
 class RelationTable(_lookups.Lookup):
@@ -294,7 +297,7 @@ class RelationTable(_lookups.Lookup):
         if not key:
             return
         if key in self:
-            _warn("Source table '{}' participates in multiple {} relationships".format(key.upper(), values.type),
+            _warn("Source table '{}' participates in multiple {} relationships".format(key.upper(), values.relate_type),
                   DefinitionWarning)
             return
         self[key] = values
