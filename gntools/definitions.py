@@ -64,22 +64,22 @@ class _EleTableNames(_Definition):
     """
 
     strand = property(lambda self: self._def.get('tablename_branch', 'ele_strang'))
-    cable = property(lambda self: self._def.get('tablename_cable', 'ele_kabel')),
-    cable_connection = property(lambda self: self._def.get('tablename_ds_cableconnector', 'ele_ds_kabelverbindung')),
-    clamp = property(lambda self: self._def.get('tablename_clamp', 'ele_ds_klemme')),
-    connector = property(lambda self: self._def.get('tablename_ds_connector', 'ele_ds_verbinder')),
-    house = property(lambda self: self._def.get('tablename_house_conn', 'ele_hausanschluss')),
-    lighting = property(lambda self: self._def.get('tablename_luminary', 'ele_leuchte')),
-    pipe = property(lambda self: self._def.get('tablename_pipe', 'ele_rohr')),
-    rel_cable_route = property(lambda self: self._def.get('tablename_route_cable', 'eler_trasse_kabel')),
-    rel_pipe_cable = property(lambda self: self._def.get('tablename_pipe_cable', 'eler_rohr_kabel')),
-    rel_pipe_pipe = property(lambda self: self._def.get('tablename_pipe_pipe', 'eler_rohr_rohr')),
-    rel_route_rohr = property(lambda self: self._def.get('tablename_route_pipe', 'eler_route_pipe')),
-    route = property(lambda self: self._def.get('tablename_route', 'ele_trasse')),
-    socket = property(lambda self: self._def.get('tablename_sleeve_socket', 'ele_muffe')),
-    station = property(lambda self: self._def.get('tablename_ds_station', 'ele_ds_station')),
-    transformer = property(lambda self: self._def.get('tablename_ds_transformer', 'ele_ds_transformer')),
-    transition = property(lambda self: self._def.get('tablename_ds_inout', 'ele_ds_uebergang')),
+    cable = property(lambda self: self._def.get('tablename_cable', 'ele_kabel'))
+    cable_connection = property(lambda self: self._def.get('tablename_ds_cableconnector', 'ele_ds_kabelverbindung'))
+    clamp = property(lambda self: self._def.get('tablename_clamp', 'ele_ds_klemme'))
+    connector = property(lambda self: self._def.get('tablename_ds_connector', 'ele_ds_verbinder'))
+    house = property(lambda self: self._def.get('tablename_house_conn', 'ele_hausanschluss'))
+    lighting = property(lambda self: self._def.get('tablename_luminary', 'ele_leuchte'))
+    pipe = property(lambda self: self._def.get('tablename_pipe', 'ele_rohr'))
+    rel_cable_route = property(lambda self: self._def.get('tablename_route_cable', 'eler_trasse_kabel'))
+    rel_pipe_cable = property(lambda self: self._def.get('tablename_pipe_cable', 'eler_rohr_kabel'))
+    rel_pipe_pipe = property(lambda self: self._def.get('tablename_pipe_pipe', 'eler_rohr_rohr'))
+    rel_route_rohr = property(lambda self: self._def.get('tablename_route_pipe', 'eler_route_pipe'))
+    route = property(lambda self: self._def.get('tablename_route', 'ele_trasse'))
+    socket = property(lambda self: self._def.get('tablename_sleeve_socket', 'ele_muffe'))
+    station = property(lambda self: self._def.get('tablename_ds_station', 'ele_ds_station'))
+    transformer = property(lambda self: self._def.get('tablename_ds_transformer', 'ele_ds_transformer'))
+    transition = property(lambda self: self._def.get('tablename_ds_inout', 'ele_ds_uebergang'))
 
 
 class _EleFieldNames(_Definition):
@@ -93,26 +93,26 @@ class _EleFieldNames(_Definition):
         A DefinitionTable instance. The table must fit the electric solution.
     """
 
-    cable_ref = property(lambda self: self._def.get('fieldname_cable_ref', 'kabel_ref')),
-    code = property(lambda self: self._def.get('fieldname_code_ref', 'code')),
-    dd_ref = property(lambda self: self._def.get('fieldname_ds_ref', 'ds_ref')),
-    ddhv_ref = property(lambda self: self._def.get('fieldname_dshs_ref', 'dshs_ref')),
-    ddlv_ref = property(lambda self: self._def.get('fieldname_dsns_ref', 'dsns_ref')),
-    ddmv_ref = property(lambda self: self._def.get('fieldname_dsms_ref', 'dsms_ref')),
-    ddpl_ref = property(lambda self: self._def.get('fieldname_dsob_ref', 'dsob_ref')),
-    index = property(lambda self: self._def.get('fieldname_idx', 'idx')),
-    item_number = property(lambda self: self._def.get('fieldname_clamp_number', 'nummer')),
-    length = property(lambda self: self._def.get('fieldname_length', 'laenge')),
-    name_number = property(lambda self: self._def.get('fieldname_ds_trafo_name_number', 'name_nummer')),
-    pipe_ref = property(lambda self: self._def.get('fieldname_pipe_ref', 'rohr_ref')),
-    position = property(lambda self: self._def.get('fieldname_posnum', 'posnum')),
-    route_index = property(lambda self: self._def.get('fieldname_trench_idx', 'trasse_idx')),
-    route_pos = property(lambda self: self._def.get('fieldname_trench_pos', 'trasse_pos')),
-    route_ref = property(lambda self: self._def.get('fieldname_route_ref', 'trasse_ref')),
-    station_ref = property(lambda self: self._def.get('fieldname_station_ref', 'station_ref')),
-    strand_ref = property(lambda self: self._def.get('fieldname_strang_ref', 'strang_ref')),
-    transformer_ref = property(lambda self: self._def.get('fieldname_trafo_ref', 'trafo_ref')),
-    type = property(lambda self: self._def.get('fieldname_trasse_typ', 'typ')),
+    cable_ref = property(lambda self: self._def.get('fieldname_cable_ref', 'kabel_ref'))
+    code = property(lambda self: self._def.get('fieldname_code_ref', 'code'))
+    dd_ref = property(lambda self: self._def.get('fieldname_ds_ref', 'ds_ref'))
+    ddhv_ref = property(lambda self: self._def.get('fieldname_dshs_ref', 'dshs_ref'))
+    ddlv_ref = property(lambda self: self._def.get('fieldname_dsns_ref', 'dsns_ref'))
+    ddmv_ref = property(lambda self: self._def.get('fieldname_dsms_ref', 'dsms_ref'))
+    ddpl_ref = property(lambda self: self._def.get('fieldname_dsob_ref', 'dsob_ref'))
+    index = property(lambda self: self._def.get('fieldname_idx', 'idx'))
+    item_number = property(lambda self: self._def.get('fieldname_clamp_number', 'nummer'))
+    length = property(lambda self: self._def.get('fieldname_length', 'laenge'))
+    name_number = property(lambda self: self._def.get('fieldname_ds_trafo_name_number', 'name_nummer'))
+    pipe_ref = property(lambda self: self._def.get('fieldname_pipe_ref', 'rohr_ref'))
+    position = property(lambda self: self._def.get('fieldname_posnum', 'posnum'))
+    route_index = property(lambda self: self._def.get('fieldname_trench_idx', 'trasse_idx'))
+    route_pos = property(lambda self: self._def.get('fieldname_trench_pos', 'trasse_pos'))
+    route_ref = property(lambda self: self._def.get('fieldname_route_ref', 'trasse_ref'))
+    station_ref = property(lambda self: self._def.get('fieldname_station_ref', 'station_ref'))
+    strand_ref = property(lambda self: self._def.get('fieldname_strang_ref', 'strang_ref'))
+    transformer_ref = property(lambda self: self._def.get('fieldname_trafo_ref', 'trafo_ref'))
+    type = property(lambda self: self._def.get('fieldname_trasse_typ', 'typ'))
     voltage = property(lambda self: self._def.get('fieldname_dense', 'spannung'))
 
 
