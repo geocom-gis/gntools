@@ -46,11 +46,13 @@ class _Definition(object):
     """ Base class for all definition mappings. """
     __slots__ = '_def'
 
-    def __init__(self, definition):
-        self._def = definition
+    def __init__(self, definitions):
+        _vld.pass_if(isinstance(definitions, DefinitionTable), ValueError,
+                     "'definitions' argument must be a DefinitionTable instance")
+        self._def = definitions
 
 
-class EleTableNames(_Definition):
+class _EleTableNames(_Definition):
     """
     Provides access to GEONIS ELE table names for the given definition table (electric solution).
 
@@ -58,8 +60,9 @@ class EleTableNames(_Definition):
 
     -   **definition** (:class:`DefinitionTable`):
 
-        A DefinitionTable instance.
+        A DefinitionTable instance. The table must fit the electric solution.
     """
+
     strand = property(lambda self: self._def.get('tablename_branch', 'ele_strang'))
     cable = property(lambda self: self._def.get('tablename_cable', 'ele_kabel')),
     cable_connection = property(lambda self: self._def.get('tablename_ds_cableconnector', 'ele_ds_kabelverbindung')),
@@ -79,7 +82,7 @@ class EleTableNames(_Definition):
     transition = property(lambda self: self._def.get('tablename_ds_inout', 'ele_ds_uebergang')),
 
 
-class EleFieldNames(_Definition):
+class _EleFieldNames(_Definition):
     """
     Provides access to GEONIS ELE field names for the given definition table (electric solution).
 
@@ -87,8 +90,9 @@ class EleFieldNames(_Definition):
 
     -   **definition** (:class:`DefinitionTable`):
 
-        A DefinitionTable instance.
+        A DefinitionTable instance. The table must fit the electric solution.
     """
+
     cable_ref = property(lambda self: self._def.get('fieldname_cable_ref', 'kabel_ref')),
     code = property(lambda self: self._def.get('fieldname_code_ref', 'code')),
     dd_ref = property(lambda self: self._def.get('fieldname_ds_ref', 'ds_ref')),
@@ -143,27 +147,32 @@ class DefinitionTable(_lookups.ValueLookup):
         except RuntimeError:
             _warn("Failed to read GEONIS definition table for the '{}' solution".format(solution.upper()),
                   DefinitionWarning)
-        self.solution = solution.lower()
+        self._solution = solution.lower()
 
     @property
     def tablenames(self):
         """ Provides access to GEONIS table names for the given solution. """
         if self:
-            if self.solution == _const.GNMEDIA_ELECTRIC:
-                return EleTableNames(self)
-            # elif ... TODO: Add classes for other solutions
+            if self._solution == _const.GNMEDIA_ELECTRIC:
+                return _EleTableNames(self)
+            # elif ... TODO: Add other solution cases
 
-        raise ValueError('There are no table definitions for the {} solution'.format(self.solution.upper()))
+        raise ValueError('There are no table definitions for the {} solution'.format(self._solution.upper()))
 
     @property
     def fieldnames(self):
         """ Provides access to GEONIS field names for the given solution. """
         if self:
-            if self.solution == _const.GNMEDIA_ELECTRIC:
-                return EleFieldNames(self)
-            # elif ... TODO: Add classes for other solutions
+            if self._solution == _const.GNMEDIA_ELECTRIC:
+                return _EleFieldNames(self)
+            # elif ... TODO: Add other solution cases
 
-        raise ValueError('There are no field definitions for the {} solution'.format(self.solution.upper()))
+        raise ValueError('There are no field definitions for the {} solution'.format(self._solution.upper()))
+
+    @property
+    def solution(self):
+        """ Returns the (lowercase) solution name to which this definitions table applies. """
+        return self._solution
 
 
 class Relation(tuple):
@@ -270,13 +279,15 @@ class RelationTable(_lookups.Lookup):
         table_path = str(workspace.make_path(_const.GNTABLE_RELATION_DEF))
         type_filter = _queries.Where(_const.GNFIELD_REL_TYPE, '=', relation_type)
 
-        # Set required fields
+        # Define required field default names
         src_table = _const.GNFIELD_REL_TABLE_SRC
         dst_table = _const.GNFIELD_REL_TABLE_DST
         src_field = _const.GNFIELD_REL_KEYFIELD_SRC
         dst_field = _const.GNFIELD_REL_KEYFIELD_DST
         src_rel = _const.GNFIELD_REL_RELFIELD_SRC
         dst_rel = _const.GNFIELD_REL_RELFIELD_DST
+
+        # Switch source and destination fields if 'reverse' is True
         if reverse:
             src_table = _const.GNFIELD_REL_TABLE_DST
             dst_table = _const.GNFIELD_REL_TABLE_SRC
@@ -284,6 +295,8 @@ class RelationTable(_lookups.Lookup):
             dst_field = _const.GNFIELD_REL_KEYFIELD_SRC
             src_rel = _const.GNFIELD_REL_RELFIELD_DST
             dst_rel = _const.GNFIELD_REL_RELFIELD_SRC
+
+        # Set fields to collect
         fields = (dst_table, _const.GNFIELD_REL_TABLE_REL, src_field,
                   dst_field, src_rel, dst_rel, _const.GNFIELD_REL_TYPE)
 
