@@ -24,7 +24,6 @@ from xml.etree import cElementTree as _Xml
 
 import gpf.common.iterutils as _iter
 import gpf.common.validate as _vld
-from gpf import arcpy as _arcpy
 
 _JSON_NAN = 'NaN'
 _JSON_PATHS = 'paths'
@@ -498,22 +497,24 @@ def serialize(geometry):
     """
 
     json_shape = None
-    if isinstance(geometry, _arcpy.Geometry):
-        # Extract EsriJSON string from arcpy Geometry instance
-        geometry = geometry.JSON
-    elif isinstance(geometry, _arcpy.Point):
-        # Convert arcpy Point instance to EsriJSON dict
-        json_shape = {_JSON_X: geometry.X, _JSON_Y: geometry.Y}
-    elif _vld.is_iterable(geometry) and len(geometry) > 1:
-        # Geometry consists of at least 2 coordinates (assume x and y): convert to EsriJSON dict
-        json_shape = {_JSON_X: geometry[0], _JSON_Y: geometry[1]}
 
-    if isinstance(geometry, basestring):
-        # Geometry is an EsriJSON string: load as dict
-        json_shape = _json.loads(geometry)
+    try:
+        if hasattr(geometry, 'JSON'):
+            # Extract EsriJSON string from arcpy Geometry instance
+            geometry = geometry.JSON
+        elif hasattr(geometry, 'X') and hasattr(geometry, 'Y'):
+            # Convert arcpy Point instance to EsriJSON dict
+            json_shape = {_JSON_X: geometry.X, _JSON_Y: geometry.Y}
+        elif _vld.is_iterable(geometry) and len(geometry) > 1:
+            # Geometry consists of at least 2 coordinates (assume x and y): convert to EsriJSON dict
+            json_shape = {_JSON_X: geometry[0], _JSON_Y: geometry[1]}
 
-    # except (TypeError, AttributeError, ValueError) as e:
-    #     print(e)
-    #     raise GeometrySerializationError('serialize() requires a valid EsriJSON string or a Geometry instance')
+        if isinstance(geometry, basestring):
+            # Geometry is an EsriJSON string: load as dict
+            json_shape = _json.loads(geometry)
+
+    except Exception as e:
+        raise GeometrySerializationError('serialize() requires an EsriJSON string, '
+                                         'Geometry or Point instance, or a coordinate tuple: {}'.format(e))
 
     return _serialize_geometry(json_shape)
