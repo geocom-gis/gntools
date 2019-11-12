@@ -67,6 +67,13 @@ GNFIELD_REL_KEYFIELD_DST = 'target_reffield'
 GNFIELD_REL_RELFIELD_SRC = 'relate_sourcereffield'
 GNFIELD_REL_RELFIELD_DST = 'relate_targetreffield'
 
+# GEONIS description fields
+GNFIELD_DESC_CUSTOM = 'description_custom'
+GNFIELD_DESC_DE = 'description_g'
+GNFIELD_DESC_EN = 'description_e'
+GNFIELD_DESC_FR = 'description_f'
+GNFIELD_DESC_IT = 'description_i'
+
 # GEONIS relationship type names
 GNRELTYPE_AGGREGRATE = 'Aggregate'
 GNRELTYPE_COMPOSITE = 'Composite'
