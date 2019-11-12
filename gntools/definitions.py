@@ -30,11 +30,15 @@ The :class:`RelationTable` class reads the inter-table-relationships from the GN
 from warnings import warn as _warn
 
 from gntools.common import const as _const
+from gntools.common import i18n as _i18n
 from gpf import lookups as _lookups
 from gpf import paths as _paths
 from gpf.common import validate as _vld
 from gpf.common import textutils as _tu
 from gpf.tools import queries as _queries
+
+# Store the current GEONIS language globally, once it has been determined
+_gn_lang = None
 
 
 class DefinitionWarning(UserWarning):
@@ -65,9 +69,19 @@ class _EleTableNames(_Definition):
 
     strand = property(lambda self: self._def.get('tablename_branch', 'ele_strang'))
     cable = property(lambda self: self._def.get('tablename_cable', 'ele_kabel'))
-    cable_connection = property(lambda self: self._def.get('tablename_ds_cableconnector', 'ele_ds_kabelverbindung'))
     clamp = property(lambda self: self._def.get('tablename_clamp', 'ele_ds_klemme'))
-    connector = property(lambda self: self._def.get('tablename_ds_connector', 'ele_ds_verbinder'))
+    construction_line = property(lambda self: self._def.get('tablename_construction_line', 'ele_bauobjekt_lin'))
+    cs_base = property(lambda self: self._def.get('tablename_cs_base', 'ele_qs_basis'))
+    cs_cable = property(lambda self: self._def.get('tablename_cs_cable', 'ele_qs_kabel'))
+    cs_area = property(lambda self: self._def.get('tablename_cs_frame', 'ele_qs_fla'))
+    cs_pipe = property(lambda self: self._def.get('tablename_cs_pipe', 'ele_qs_rohr'))
+    cs_pipe_pipe = property(lambda self: self._def.get('tablename_cs_pipepipe', 'ele_qs_rohr_rohr'))
+    cs_cable_protect_pos = property(lambda self: self._def.get('tablename_cs_posnum_label', 'elet_qs_kabelschutzpos'))
+    ds_connector = property(lambda self: self._def.get('tablename_ds_connector', 'ele_ds_verbinder'))
+    ds_cable_connector = property(lambda self: self._def.get('tablename_ds_cableconnector', 'ele_ds_kabelverbindung'))
+    ds_transition = property(lambda self: self._def.get('tablename_ds_inout', 'ele_ds_uebergang'))
+    ds_station = property(lambda self: self._def.get('tablename_ds_station', 'ele_ds_station'))
+    ds_transformer = property(lambda self: self._def.get('tablename_ds_transformer', 'ele_ds_transformer'))
     house = property(lambda self: self._def.get('tablename_house_conn', 'ele_hausanschluss'))
     lighting = property(lambda self: self._def.get('tablename_luminary', 'ele_leuchte'))
     pipe = property(lambda self: self._def.get('tablename_pipe', 'ele_rohr'))
@@ -76,10 +90,19 @@ class _EleTableNames(_Definition):
     rel_pipe_pipe = property(lambda self: self._def.get('tablename_pipe_pipe', 'eler_rohr_rohr'))
     rel_route_rohr = property(lambda self: self._def.get('tablename_route_pipe', 'eler_route_pipe'))
     route = property(lambda self: self._def.get('tablename_route', 'ele_trasse'))
-    socket = property(lambda self: self._def.get('tablename_sleeve_socket', 'ele_muffe'))
-    station = property(lambda self: self._def.get('tablename_ds_station', 'ele_ds_station'))
-    transformer = property(lambda self: self._def.get('tablename_ds_transformer', 'ele_ds_transformer'))
-    transition = property(lambda self: self._def.get('tablename_ds_inout', 'ele_ds_uebergang'))
+    sec_cable_voltage = property(lambda self: self._def.get('tablename_sec_cable_dense', 'eles_spannung'))
+    sec_cable_protect = property(lambda self: self._def.get('tablename_sec_cable_protect', 'eles_kabelschutz_rohr'))
+    sec_cs_cable = property(lambda self: self._def.get('tablename_sec_cable_cs', 'eles_querschnitt_kabel'))
+    sec_cs_route = property(lambda self: self._def.get('tablename_typ_querschnitt', 'eles_querschnitt_trasse'))
+    sec_cs_scaling = property(lambda self: self._def.get('tablename_querschnitt_skalierung',
+                                                         'eles_querschnitt_skalierung'))
+    sec_net_color = property(lambda self: self._def.get('tablename_sec_netcolor', 'eles_netzfarbe'))
+    sec_type_dd = property(lambda self: self._def.get('tablename_typ_ds', 'eles_typ_ds'))
+    sec_type_route = property(lambda self: self._def.get('tablename_typ_trasse', 'eles_typ_trasse'))
+    sleeve = property(lambda self: self._def.get('tablename_sleeve_socket', 'ele_muffe'))
+    t_cs_cable = property(lambda self: self._def.get('tablename_t_cs_cable', 'elet_qs_kabel'))
+    t_cs_rohr = property(lambda self: self._def.get('tablename_t_cs_pipe', 'elet_qs_rohr'))
+    t_cs_rohr_rohr = property(lambda self: self._def.get('tablename_t_cs_pipe_pipe', 'elet_qs_rohr_rohr'))
 
 
 class _EleFieldNames(_Definition):
@@ -93,27 +116,63 @@ class _EleFieldNames(_Definition):
         A DefinitionTable instance. The table must fit the electric solution.
     """
 
+    cable_protect = property(lambda self: self._def.get('fieldname_cable_protect', 'kabelschutz'))
     cable_ref = property(lambda self: self._def.get('fieldname_cable_ref', 'kabel_ref'))
-    code = property(lambda self: self._def.get('fieldname_code_ref', 'code'))
+    clamp_number = property(lambda self: self._def.get('fieldname_clamp_number', 'nummer'))
+    code_ref = property(lambda self: self._def.get('fieldname_code_ref', 'code'))
+    cs_angle = property(lambda self: self._def.get('fieldname_cs_angle', 'symbolori'))
+    cs_mapscale = property(lambda self: self._def.get('fieldname_cs_mapscale', 'mapscale'))
+    cs_ref = property(lambda self: self._def.get('fieldname_cs_ref', 'qs_ref'))
+    cs_released = property(lambda self: self._def.get('fieldname_cs_released', 'released'))
+    cs_type = property(lambda self: self._def.get('fieldname_cs_typ', 'querschnitt'))
+    cs_visible = property(lambda self: self._def.get('fieldname_cs_visible', 'visible'))
+    cs_width = property(lambda self: self._def.get('fieldname_cs_width', 'breite'))
     dd_ref = property(lambda self: self._def.get('fieldname_ds_ref', 'ds_ref'))
     ddhv_ref = property(lambda self: self._def.get('fieldname_dshs_ref', 'dshs_ref'))
     ddlv_ref = property(lambda self: self._def.get('fieldname_dsns_ref', 'dsns_ref'))
     ddmv_ref = property(lambda self: self._def.get('fieldname_dsms_ref', 'dsms_ref'))
     ddpl_ref = property(lambda self: self._def.get('fieldname_dsob_ref', 'dsob_ref'))
+    info_text = property(lambda self: self._def.get('fieldname_elementinfo', 'infotext'))
+    feature_link = property(lambda self: self._def.get('fieldname_featurelink', 'featurelink'))
     index = property(lambda self: self._def.get('fieldname_idx', 'idx'))
-    item_number = property(lambda self: self._def.get('fieldname_clamp_number', 'nummer'))
+    ipipe_ref = property(lambda self: self._def.get('fieldname_ipipe_ref', 'inner_rohr_ref'))
     length = property(lambda self: self._def.get('fieldname_length', 'laenge'))
-    name_number = property(lambda self: self._def.get('fieldname_ds_trafo_name_number', 'name_nummer'))
+    opipe_ref = property(lambda self: self._def.get('fieldname_opipe_ref', 'ueber_rohr_ref'))
     pipe_ref = property(lambda self: self._def.get('fieldname_pipe_ref', 'rohr_ref'))
     position = property(lambda self: self._def.get('fieldname_posnum', 'posnum'))
     route_index = property(lambda self: self._def.get('fieldname_trench_idx', 'trasse_idx'))
     route_pos = property(lambda self: self._def.get('fieldname_trench_pos', 'trasse_pos'))
     route_ref = property(lambda self: self._def.get('fieldname_route_ref', 'trasse_ref'))
+    route_reverse = property(lambda self: self._def.get('fieldname_trench_reverse', 'reverse'))
+    route_type = property(lambda self: self._def.get('fieldname_trasse_typ', 'typ'))
     station_ref = property(lambda self: self._def.get('fieldname_station_ref', 'station_ref'))
     strand_ref = property(lambda self: self._def.get('fieldname_strang_ref', 'strang_ref'))
+    text_ori = property(lambda self: self._def.get('fieldname_text_angle', 'textori'))
+    transformer_number = property(lambda self: self._def.get('fieldname_ds_trafo_name_number', 'name_nummer'))
+    transformer_power = property(lambda self: self._def.get('fieldname_trafo_power', 'leistung'))
     transformer_ref = property(lambda self: self._def.get('fieldname_trafo_ref', 'trafo_ref'))
-    type = property(lambda self: self._def.get('fieldname_trasse_typ', 'typ'))
     voltage = property(lambda self: self._def.get('fieldname_dense', 'spannung'))
+
+    # The following property seems a bit odd, but this is actually how its determined in the GEONIS core code...
+    name_number = property(lambda self:
+                           'name_nummer' if _EleTableNames(self._def).sec_cable_voltage == 'eles_spannung'
+                           else 'name_number')
+
+    @property
+    def description(self):
+        """ Determines the current GEONIS language and returns the matching description field name for it. """
+        global _gn_lang
+
+        # Only read the language once and store it on the global module level
+        _gn_lang = _gn_lang or _i18n.get_language()
+
+        return {
+            _i18n.GN_LANG_CUSTOM: _const.GNFIELD_DESC_CUSTOM,
+            _i18n.GN_LANG_DE:     _const.GNFIELD_DESC_DE,
+            _i18n.GN_LANG_EN:     _const.GNFIELD_DESC_EN,
+            _i18n.GN_LANG_FR:     _const.GNFIELD_DESC_FR,
+            _i18n.GN_LANG_IT:     _const.GNFIELD_DESC_IT
+        }.get(_gn_lang, _const.GNFIELD_DESC_DE)
 
 
 class DefinitionTable(_lookups.ValueLookup):
@@ -277,7 +336,7 @@ class RelationTable(_lookups.Lookup):
 
         # Construct relation definition table path and where clause
         table_path = str(workspace.make_path(_const.GNTABLE_RELATION_DEF))
-        type_filter = _queries.Where(_const.GNFIELD_REL_TYPE, '=', relation_type)
+        type_filter = _queries.Where(_const.GNFIELD_REL_TYPE).Equals(relation_type)
 
         # Define required field default names
         src_table = _const.GNFIELD_REL_TABLE_SRC
