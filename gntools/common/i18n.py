@@ -37,6 +37,11 @@ _GN_REGVAL = 'DefaultLanguage'
 
 
 def _get_registry_lang():
+    """
+    Tries to find the GEONIS language in the Windows registry. Returns an empty string when not found.
+
+    :rtype: basestring
+    """
 
     try:
         # Connect to the Windows registry for the current user
@@ -54,6 +59,11 @@ def _get_registry_lang():
 
 
 def _get_locale_lang():
+    """
+    Returns the language from the default locale. When not set, an empty string is returned.
+
+    :rtype: basestring
+    """
 
     loc, _ = _getdeflocale()
     lang, _ = loc.lower().split(_const.CHAR_UNDERSCORE)
@@ -61,7 +71,7 @@ def _get_locale_lang():
         return lang
 
     _warn('Failed to determine a valid GEONIS language from Windows locale: defaulting to German')
-    return GN_LANG_DE
+    return ''
 
 
 def get_language():
@@ -71,8 +81,10 @@ def get_language():
     If the language code could not be determined, or the language is not a supported GEONIS language
     (i.e. not English, German, French or Italian), the default language code ('de') is returned.
 
-    If the GEONIS user has specified a custom language, 'cu' is returned.
+    .. note::   When the GEONIS user has specified a custom language, 'cu' is returned.
+                This will affect the *description* field names that are returned by the
+                :func:`gntools.definitions.DefinitionTable.fieldnames` object.
     """
 
-    # Get language from registry or (when not set/found) from the locale
-    return _get_registry_lang() or _get_locale_lang()
+    # Get language from registry or (when not set/found) from the locale or (when undefined) return German default
+    return _get_registry_lang() or _get_locale_lang() or GN_LANG_DE
