@@ -78,6 +78,7 @@ class _EleTableNames(_Definition):
     ds_station = property(lambda self: self._def.get('tablename_ds_station', 'ele_ds_station'))
     ds_transformer = property(lambda self: self._def.get('tablename_ds_transformer', 'ele_ds_transformer'))
     house = property(lambda self: self._def.get('tablename_house_conn', 'ele_hausanschluss'))
+    int_connection = property(lambda self: self._def.get('tablename_int_conn', 'ele_intverbindung'))
     lighting = property(lambda self: self._def.get('tablename_luminary', 'ele_leuchte'))
     pipe = property(lambda self: self._def.get('tablename_pipe', 'ele_rohr'))
     rel_cable_route = property(lambda self: self._def.get('tablename_route_cable', 'eler_trasse_kabel'))
