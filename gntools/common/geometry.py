@@ -497,16 +497,23 @@ def serialize(geometry):
     .. seealso::        :class:`gntools.protocol.Logger`, :class:`gntools.protocol.Feature`
     """
 
-    try:
-        if isinstance(geometry, _arcpy.Geometry):
-            json_shape = _json.loads(geometry.JSON)
-        elif isinstance(geometry, _arcpy.Point):
-            json_shape = {_JSON_X: geometry.X, _JSON_Y: geometry.Y}
-        elif _vld.is_iterable(geometry):
-            json_shape = dict(zip((_JSON_X, _JSON_Y), geometry[:2]))
-        else:
-            json_shape = _json.loads(geometry)
-    except (TypeError, ValueError, AttributeError, Exception):
-        raise TypeError('serialize() requires a valid EsriJSON string or a Geometry instance')
+    json_shape = None
+    if isinstance(geometry, _arcpy.Geometry):
+        # Extract EsriJSON string from arcpy Geometry instance
+        geometry = geometry.JSON
+    elif isinstance(geometry, _arcpy.Point):
+        # Convert arcpy Point instance to EsriJSON dict
+        json_shape = {_JSON_X: geometry.X, _JSON_Y: geometry.Y}
+    elif _vld.is_iterable(geometry) and len(geometry) > 1:
+        # Geometry consists of at least 2 coordinates (assume x and y): convert to EsriJSON dict
+        json_shape = {_JSON_X: geometry[0], _JSON_Y: geometry[1]}
+
+    if isinstance(geometry, basestring):
+        # Geometry is an EsriJSON string: load as dict
+        json_shape = _json.loads(geometry)
+
+    # except (TypeError, AttributeError, ValueError) as e:
+    #     print(e)
+    #     raise GeometrySerializationError('serialize() requires a valid EsriJSON string or a Geometry instance')
 
     return _serialize_geometry(json_shape)
