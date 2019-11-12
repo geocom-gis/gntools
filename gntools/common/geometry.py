@@ -22,6 +22,7 @@ import json as _json
 import math as _math
 from xml.etree import cElementTree as _Xml
 
+import gpf.common.iterutils as _iter
 import gpf.common.validate as _vld
 from gpf import arcpy as _arcpy
 
@@ -209,29 +210,35 @@ def is_minor(start_point, mid_point, end_point):
     return get_angle(center, start_point, end_point) < 180
 
 
-def get_area(ring):
+def is_clockwise(ring):
     """
-    Calculates the area for a polygon "ring" using the Shoelace formula.
-    Returns a positive area when the ring turns clockwise and a negative area when the ring turns counterclockwise.
+    Returns ``True`` when the given list or tuple of polygon ring coordinates turns clockwise.
+
+    This is achieved by calculating an area approximation for the ring using the Shoelace formula.
+    When the area is positive, the ring turns clockwise. When negative, the ring turns counterclockwise.
 
     :param ring:    An EsriJSON ring.
     :type ring:     tuple, list
-    :return:        The area (in square input units).
-    :rtype:          float
+    :rtype:         bool
     """
-    return (sum(pair[0][0] * pair[1][1] for pair in zip(ring, ring[1:])) +
-            sum(-(pair[1][0] * pair[0][1]) for pair in zip(ring, ring[1:]))) / 2.0
+    if not all(isinstance(v, (list, tuple)) for v in ring):
+        # If the ring contains arcs, we'll simplify it to a list of coordinates.
+        # Note that this will no longer produce an accurate area.
+        ring = _simplify_ring(ring)
+
+    return ((sum(pair[0][0] * pair[1][1] for pair in zip(ring[:-1], ring[1:])) +
+             sum(-(pair[1][0] * pair[0][1]) for pair in zip(ring[:-1], ring[1:]))) / 2.0) > 0
 
 
 def _fix_start(start_object):
     """
     If `start_object` is not a point iterable but a curve object, `start_object` is set to the curves' end point.
 
-    :param start_object:    A start point iterable or curve object
-    :return:                A 'true' start point
+    :param start_object:    A start point iterable or curve object.
+    :return:                A 'true' start point.
     """
     if isinstance(start_object, dict):
-        # The start point needs to be derived from end point of the curve object
+        # The start point needs to be derived from the end point of the curve object
         return _read_curve(start_object)[1][0]
     return start_object
 
@@ -240,21 +247,51 @@ def _read_curve(curve_object):
     """
     Extracts a tuple of (curve type, curve properties) from the single `curve_object` key-value pair.
 
-    :param curve_object:
-    :return:
+    :param curve_object:    The curve object dictionary (key-value pair).
+    :rtype:                 tuple
     """
-    return curve_object.items()[0]
+    return _iter.first(curve_object.iteritems())
+
+
+def _simplify_ring(ring):
+    """
+    Returns a "simplified" version of a polygon ring (list of coordinates).
+    If the polygon contains arcs, only their start and end points (and control points) will be taken.
+    Note that this might produce invalid geometries.
+    This function should therefore only be used by the :func:`is_clockwise` function.
+
+    :param ring:    A list or tuple of polygon ring coordinates.
+    :rtype:         list
+    """
+    coords = []
+    for point in ring:
+        if isinstance(point, dict):
+            # We are dealing with an arc/curve
+            curve_type, curve_points = _read_curve(point)
+            if curve_type == _CURVE_CARC:
+                # For circular arcs, add the midpoint, followed by the end point
+                coords.extend(reversed(curve_points))
+            elif curve_type == _CURVE_EARC:
+                # For elliptical arcs, simply add the end point for now: todo
+                coords.append(curve_points[0])
+            elif curve_type == _CURVE_BEZIER:
+                # For bezier curves, add the control points, followed by the end point
+                coords.extend(curve_points[:1])
+                coords.append(curve_points[0])
+        else:
+            coords.append(point)
+    return coords
 
 
 def _serialize_point(x, y):
     """
     Serializes the EsriJSON point to XML.
 
-    :param x:   Coordinate X value
-    :param y:   Coordinate Y value
-    :return:    An XML 'Point' element
+    :param x:   Coordinate X value.
+    :param y:   Coordinate Y value.
+    :return:    An XML 'Point' element.
     """
-    if not x or x == _JSON_NAN or not y or y == _JSON_NAN:
+    if x in (None, _JSON_NAN) or y in (None, _JSON_NAN):
         raise GeometrySerializationError('Points should have valid numeric X and Y values')
     return _Xml.Element(_TAG_POINT, {_ATTR_ENUM: str(_ESRI_ENUM_POINT), _XML_X: str(x), _XML_Y: str(y)})
 
@@ -263,9 +300,9 @@ def _serialize_line(p1, p2):
     """
     Serializes the EsriJSON line to XML.
 
-    :param p1:  First point [x, y, ...] or last curve object
-    :param p2:  Second point [x, y, ...]
-    :return:    An XML 'Line' element
+    :param p1:  First point [x, y, ...] or last curve object.
+    :param p2:  Second point [x, y, ...].
+    :return:    An XML 'Line' element.
     """
     p1 = _fix_start(p1)
     line_xml = _Xml.Element(_TAG_LINE, {_ATTR_ENUM: str(_ESRI_ENUM_LINE)})
@@ -274,18 +311,18 @@ def _serialize_line(p1, p2):
     return line_xml
 
 
-def _serialize_circular_arc(start_point, end_point, interior_point):
+def _serialize_carc(start_point, end_point, interior_point):
     """
     Serializes the EsriJSON circular arc to XML.
 
     :param start_point:     Start point [x, y, ...]
     :param end_point:       End point [x, y, ...]
-    :param interior_point:  Interior or midpoint [x, y, ...]
-    :return:                An XML 'CircularArc' element
+    :param interior_point:  Interior a.k.a. midpoint [x, y, ...]
+    :return:                An XML 'CircularArc' element.
     """
     curve_xml = _Xml.Element(_TAG_CARC, {
         _ATTR_ENUM: str(_ESRI_ENUM_CARC),
-        _ATTR_CCW: _XML_FALSE if get_area([start_point, interior_point, end_point]) else _XML_TRUE,
+        _ATTR_CCW: _XML_FALSE if is_clockwise([start_point, interior_point, end_point, start_point]) else _XML_TRUE,
         _ATTR_MINOR: _XML_TRUE if is_minor(start_point, interior_point, end_point) else _XML_FALSE
     })
     curve_xml.append(_serialize_point(*interior_point[:2]))
@@ -294,13 +331,13 @@ def _serialize_circular_arc(start_point, end_point, interior_point):
     return curve_xml
 
 
-def _serialize_arc(start_point, *args):
+def _serialize_earc(start_point, *args):
     """
     Serializes the EsriJSON elliptic arc to XML.
 
     :param start_point:     Start point [x, y, ...]
-    :param args:            Values `end_point`, `center_point`, `minor`, `cw`, `rotation`, `axis` and `ratio`
-    :return:                An XML 'EllipticArc' element
+    :param args:            Values `end_point`, `center_point`, `minor`, `cw`, `rotation`, `axis` and `ratio`.
+    :return:                An XML 'EllipticArc' element.
     """
     end_point, center_point, _, cw, rotation, _, ratio = args
     curve_xml = _Xml.Element(_TAG_EARC, {
@@ -325,7 +362,7 @@ def _serialize_bezier(start_point, end_point, control_p1, control_p2):
     :param end_point:       End point [x, y, ...]
     :param control_p1:      Control point 1 [x, y]
     :param control_p2:      Control point 2 [x, y]
-    :return:                An XML 'BezierCurve' element
+    :return:                An XML 'BezierCurve' element.
     """
     curve_xml = _Xml.Element(_TAG_BEZIER, {_ATTR_ENUM: str(_ESRI_ENUM_BEZIER)})
     curve_xml.append(_serialize_point(*start_point[:2]))
@@ -344,13 +381,13 @@ def _serialize_curve(start_object, curve_object):
     :return:                An XML 'CircularArc', 'EllipticArc' or 'BezierCurve' element.
     """
     start_point = _fix_start(start_object)
-    curve_type, curve_props = _read_curve(curve_object)
+    curve_type, curve_points = _read_curve(curve_object)
     if curve_type == _CURVE_CARC:
-        return _serialize_circular_arc(start_point, *curve_props)
+        return _serialize_carc(start_point, *curve_points)
     elif curve_type == _CURVE_EARC:
-        return _serialize_arc(start_point, *curve_props)
+        return _serialize_earc(start_point, *curve_points)
     elif curve_type == _CURVE_BEZIER:
-        return _serialize_bezier(start_point, *curve_props)
+        return _serialize_bezier(start_point, *curve_points)
     raise GeometrySerializationError('{!r} is an unsupported curve object type')
 
 
@@ -361,7 +398,8 @@ def _serialize_ring(ring):
     :param ring:    A single EsriJSON 'curveRings' or 'rings' object value.
     :return:        An XML 'Ring' element.
     """
-    is_ext = get_area(ring) > 0  # Esri defines "IsExterior" as "ring orientation is clockwise, area > 0"
+    # Calculate "isexterior" property: Esri defines this as "ring orientation is clockwise, area > 0".
+    is_ext = is_clockwise(ring)
     ring_xml = _Xml.Element(_TAG_RING,
                             {_ATTR_ENUM: str(_ESRI_ENUM_RING), _ATTR_EXT: _XML_TRUE if is_ext else _XML_FALSE})
     _serialize_path(ring, ring_xml)
@@ -372,7 +410,7 @@ def _serialize_path(path, parent_node):
     """
     Serializes an EsriJSON `path` to XML and adds the elements to `parent_node`.
 
-    :param path:    A single EsriJSON 'curvePaths' or 'paths' object value.
+    :param path:    A single EsriJSON 'curvePaths/Rings' or 'paths/rings' object value.
     """
     for p1, p2 in zip(path, path[1:]):
         if isinstance(p2, list):
@@ -389,6 +427,8 @@ def _serialize_polyline(polyline):
     :param polyline:    An EsriJSON 'curvePaths' or 'paths' object value.
     :return:            An XML 'Polyline' element.
     """
+    _vld.pass_if(polyline, GeometrySerializationError, 'Polyline does not have any geometry parts')
+
     polyline_xml = _Xml.Element(_TAG_POLYLINE, {_ATTR_ENUM: str(_ESRI_ENUM_POLYLINE)})
     is_multi = len(polyline) > 1  # Does the GEONIS Protocol really never write Paths for single part polylines?
     for path in polyline:
@@ -405,6 +445,8 @@ def _serialize_polygon(polygons):
     :param polygons:    An EsriJSON 'curveRings' or 'rings' object value.
     :return:            An XML 'Polygon' element.
     """
+    _vld.pass_if(polygons, GeometrySerializationError, 'Polygon does not have any geometry parts')
+
     polygon_xml = _Xml.Element(_TAG_POLYGON, {_ATTR_ENUM: str(_ESRI_ENUM_POLYGON)})
     for path in polygons:
         polygon_xml.append(_serialize_ring(path))
