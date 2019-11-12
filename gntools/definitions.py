@@ -95,6 +95,7 @@ class _EleTableNames(_Definition):
     sec_type_dd = property(lambda self: self._def.get('tablename_typ_ds', 'eles_typ_ds'))
     sec_type_route = property(lambda self: self._def.get('tablename_typ_trasse', 'eles_typ_trasse'))
     sleeve = property(lambda self: self._def.get('tablename_sleeve_socket', 'ele_muffe'))
+    small_connection = property(lambda self: self._def.get('tablename_small_conn', 'ele_kleinanschluss'))
     t_cs_cable = property(lambda self: self._def.get('tablename_t_cs_cable', 'elet_qs_kabel'))
     t_cs_rohr = property(lambda self: self._def.get('tablename_t_cs_pipe', 'elet_qs_rohr'))
     t_cs_rohr_rohr = property(lambda self: self._def.get('tablename_t_cs_pipe_pipe', 'elet_qs_rohr_rohr'))
