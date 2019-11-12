@@ -41,11 +41,6 @@ from gpf.tools import queries as _queries
 _gn_lang = None
 
 
-class DefinitionWarning(UserWarning):
-    """ This warning is shown when the definitions for a certain solution are not available (yet). """
-    pass
-
-
 class _Definition(object):
     """ Base class for all definition mappings. """
     __slots__ = '_def'
@@ -178,7 +173,6 @@ class _EleFieldNames(_Definition):
 class DefinitionTable(_lookups.ValueLookup):
     """
     Class that exposes the definitions (named objects) within the GEONIS data model.
-    Currently, only table and field names for the ELE (electric) solution can be retrieved.
 
     **Params:**
 
@@ -197,41 +191,41 @@ class DefinitionTable(_lookups.ValueLookup):
         _vld.pass_if(isinstance(workspace, _paths.Workspace), ValueError,
                      '{!r} requires a {} object'.format(DefinitionTable.__name__, _paths.Workspace.__name__))
 
-        # Construct definition table path for the given solution
+        # Construct definition table path for the given workspace and solution
         table_path = str(workspace.make_path(_const.GNTABLE_SOLUTION_DEF.format(solution)))
 
         try:
             # Try and get a lookup for the solution
             super(DefinitionTable, self).__init__(table_path, _const.GNFIELD_NAME, _const.GNFIELD_VALUE)
         except RuntimeError:
-            _warn("Failed to read GEONIS definition table for the '{}' solution".format(solution.upper()),
-                  DefinitionWarning)
+            raise RuntimeError("Failed to read GEONIS definition table for the '{}' solution".format(solution.upper()))
+
+        if not self:
+            # The table is empty: this should never happen under normal circumstances
+            raise ValueError('There are no definitions for the {} solution'.format(solution.upper()))
+
         self._solution = solution.lower()
-
-    @property
-    def tablenames(self):
-        """ Provides access to GEONIS table names for the given solution. """
-        if self:
-            if self._solution == _const.GNMEDIA_ELECTRIC:
-                return _EleTableNames(self)
-            # elif ... TODO: Add other solution cases
-
-        raise ValueError('There are no table definitions for the {} solution'.format(self._solution.upper()))
-
-    @property
-    def fieldnames(self):
-        """ Provides access to GEONIS field names for the given solution. """
-        if self:
-            if self._solution == _const.GNMEDIA_ELECTRIC:
-                return _EleFieldNames(self)
-            # elif ... TODO: Add other solution cases
-
-        raise ValueError('There are no field definitions for the {} solution'.format(self._solution.upper()))
 
     @property
     def solution(self):
         """ Returns the (lowercase) solution name to which this definitions table applies. """
         return self._solution
+
+
+class EleDefinitions(DefinitionTable):
+
+    def __init__(self, workspace):
+        super(EleDefinitions, self).__init__(workspace, _const.GNMEDIA_ELECTRIC)
+
+    @property
+    def tables(self):
+        """ Provides access to GEONIS table names for the ELE solution. """
+        return _EleTableNames(self)
+
+    @property
+    def fields(self):
+        """ Provides access to GEONIS field names for the ELE solution. """
+        return _EleFieldNames(self)
 
 
 class Relation(tuple):
@@ -282,6 +276,11 @@ class Relation(tuple):
 
     #: The relationship type or cardinality (e.g. "1:n", "1:1", "n:m", "1:0").
     relate_type = property(lambda self: self[6])
+
+
+class RelationWarning(UserWarning):
+    """ Warning that is shown when a bad relation has been detected in the GEONIS relationship table. """
+    pass
 
 
 class RelationTable(_lookups.Lookup):
@@ -362,9 +361,8 @@ class RelationTable(_lookups.Lookup):
         try:
             # Try and build a relationship lookup
             super(RelationTable, self).__init__(table_path, src_table, fields, type_filter)
-        except RuntimeError:
-            _warn("Failed to read GEONIS relation table '{}'".format(table_path),
-                  DefinitionWarning)
+        except RuntimeError as e:
+            raise RuntimeError("Failed to read GEONIS relation table '{}': {}".format(table_path, e))
 
     def _process_row(self, row, **kwargs):
         """ Stores each row in the relationship definition table as ``Relation`` objects. """
@@ -374,6 +372,6 @@ class RelationTable(_lookups.Lookup):
             return
         if key in self:
             _warn("Source table '{}' participates in multiple {} relationships".format(key.upper(), values.relate_type),
-                  DefinitionWarning)
+                  RelationWarning)
             return
         self[key] = values
