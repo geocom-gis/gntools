@@ -278,7 +278,7 @@ class Logger(object):
 
         # Set root project attributes
         self._root.set(_ATTR_PRJROOT, prj_dir)
-        self._root.set(_ATTR_PRJROOT, prj_name)
+        self._root.set(_ATTR_PRJNAME, prj_name)
 
     def _add_entry(self, msg, msg_type, gn_feature=None, function=None):
         """
@@ -317,7 +317,7 @@ class Logger(object):
         _Xml.SubElement(parent, _TAG_CFUNC)
         _vld.raise_if(function, NotImplementedError, 'Custom functions are not supported yet')
 
-    def _write_tree(self, output_path, encoding=_GNLOG_ENCODING):
+    def _write_tree(self, output_path, encoding):
         """ Indents the current root element and its children, wraps it into an ElementTree and writes an XML. """
 
         def indent(element, level=0, last_child=False):
@@ -333,7 +333,7 @@ class Logger(object):
 
         indent(self._root)
         tree = _Xml.ElementTree(self._root)
-        tree.write(output_path, encoding=encoding, xml_declaration=True)
+        tree.write(output_path, encoding=encoding or _GNLOG_ENCODING, xml_declaration=True)
         del tree
 
     def message(self, message, gn_feature=None):
