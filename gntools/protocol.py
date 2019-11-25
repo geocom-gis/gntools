@@ -29,6 +29,7 @@ from xml.etree import cElementTree as _Xml
 import gntools.common.geometry as _geometry
 import gntools.common.const as _const
 import gpf.common.guids as _guids
+import gpf.common.textutils as _tu
 import gpf.common.validate as _vld
 import gpf.paths as _paths
 import gpf.tools.metadata as _meta
@@ -248,7 +249,7 @@ class Logger(object):
             _ATTR_READONLY: str(False).lower()  # Will this value ever be something else?
         }
         if msg not in (_const.CHAR_EMPTY, None):
-            entry_attrs[_ATTR_MSG] = msg
+            entry_attrs[_ATTR_MSG] = _tu.to_unicode(msg) if isinstance(msg, str) else msg
         return entry_attrs
 
     @staticmethod
