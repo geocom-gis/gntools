@@ -44,7 +44,7 @@ setup(
             'geospatial', 'geoprocessing', 'Esri', 'ArcGIS', 'ArcPy', 'VertiGIS'
         ],
         install_requires=['gpf >= 0.9.2'],
-        python_requires='>=2.7.14, <3',
+        python_requires='>=2.7.8, <3',
         tests_require=tests_require,
         extras_require={
             'test': tests_require
